@@ -63,6 +63,7 @@ Mobile-first. Every component designed for touch first, enhanced for desktop.
 - **Mobile-first CSS**: base styles for mobile, `min-width` breakpoints for desktop
 
 ## Directory Structure
+Directories are scaffolded. Only `background/PixelBackground.tsx` and `lib/constants.ts` are implemented; all other component/hook/store files are stubs.
 ```
 src/
   app/                     # Next.js App Router
@@ -73,19 +74,20 @@ src/
     settings/              # SettingsPanel, KeyBindingEditor
     background/            # PixelBackground (animated canvas)
     ui/                    # Shared components
-  hooks/                   # useEmulator, useSaveStates, usePlaytime, useKeyboardControls, useMediaQuery
+  hooks/                   # useEmulator, useSaveStates, usePlaytime, useKeyboardControls, useMediaQuery (stubs)
   lib/
-    db.ts                  # StorageProvider interface + IndexedDBProvider implementation
+    db.ts                  # StorageProvider interface (IndexedDBProvider not yet implemented)
     constants.ts           # Default key mappings, colors, breakpoints
   stores/
-    emulator-store.ts      # Emulator state
-    ui-store.ts            # UI state (panels, modals)
-    settings-store.ts      # User settings (key bindings, volume, toggles)
+    emulator-store.ts      # Emulator state (stub)
+    ui-store.ts            # UI state — panels, modals (stub)
+    settings-store.ts      # User settings — key bindings, volume, toggles (stub)
   types/                   # index.ts
 ```
 
 ## Commands
 ```bash
+npm install          # Install dependencies
 npm run dev          # Dev server
 npm run build        # Production build
 npm run lint         # ESLint
@@ -93,20 +95,10 @@ npx tsc --noEmit     # Type check
 ```
 
 ## Future Roadmap (design for these NOW, build LATER)
-These features are coming post-MVP. Architect current code so they slot in cleanly:
+Architect current code so these slot in cleanly post-MVP:
 
-### Cloud Sync (Accounts)
-- Users will eventually create accounts and sync ROMs + save states across devices
-- **Design for this now**: keep all IndexedDB operations behind an abstract `StorageProvider` interface in `src/lib/db.ts`. The interface exposes `saveRom`, `getRom`, `listRoms`, `saveSaveState`, `loadSaveState`, etc. The MVP implementation is `IndexedDBProvider`. Later we swap/layer in a `CloudProvider` that syncs to a backend (likely Supabase or similar).
-- Don't couple any component directly to IndexedDB — always go through the provider
-- Save state metadata (not the binary data) should be JSON-serializable for easy API transport
-- ROM IDs must be stable and deterministic (content hash) so the same ROM on two devices maps to the same saves
-
-### Key Rebinding
-- Users will be able to customize keyboard and touch control mappings
-- **Design for this now**: store key mappings in a `keyBindings` object in the settings store, NOT as hardcoded constants. The default mappings live in `src/lib/constants.ts` but the active mappings come from the store (which falls back to defaults).
-- The `useKeyboardControls` hook should read from the store, not from constants directly
-- Touch control layout positions should also eventually be customizable (drag to reposition)
+- **Cloud Sync**: All IndexedDB ops behind `StorageProvider` interface in `db.ts` — MVP uses `IndexedDBProvider`, later add `CloudProvider`. ROM IDs must be content-hashed for cross-device consistency. Save state metadata must be JSON-serializable.
+- **Key Rebinding**: Key mappings in settings store (not hardcoded). Defaults in `constants.ts`, active mappings from store. `useKeyboardControls` reads from store. Touch layout positions eventually draggable.
 
 ## Pitfalls to Avoid
 - Do NOT use `gbajs`/`gbajs2` — use `@thenick775/mgba-wasm` only
