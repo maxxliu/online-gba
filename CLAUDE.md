@@ -20,9 +20,10 @@ The mgba-wasm core uses SharedArrayBuffer and requires these headers on EVERY pa
 Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Embedder-Policy: require-corp
 ```
-Configure in `next.config.js` headers. Non-negotiable — the emulator will not work without it.
+Already configured in `next.config.js` headers. Non-negotiable — the emulator will not work without it.
 
 ### Emulator Core API (mgba-wasm)
+Approximate API — verify against `@thenick775/mgba-wasm@2.4.1` source before use:
 ```typescript
 Module.FSInit()                          // Initialize filesystem
 Module.loadGame(romPath)                 // Load a ROM
@@ -50,31 +51,46 @@ Module.getSave()                         // Get save data
 Mobile-first. Every component designed for touch first, enhanced for desktop.
 
 - **Mobile (<768px)**: No GBA shell. Fullscreen canvas + virtual touch controls. Panels are full-screen bottom sheets. Landscape: canvas fills width.
-- **Tablet (768-1024px)**: Scaled GBA shell. Overlay panels. Touch + keyboard.
-- **Desktop (>1024px)**: Full GBA shell centered. Slide-out panels. Keyboard controls.
+- **Tablet (768-1024px)**: Dynamically scaled GBA shell (~88% viewport height). Overlay panels. Touch + keyboard.
+- **Desktop (>1024px)**: Dynamically scaled GBA shell centered (~88% viewport height, max 2.5×). Slide-out panels. Keyboard controls.
 
 ## Code Conventions
 - ES modules, functional components with hooks, destructured imports
 - `'use client'` only where needed
 - Named exports for components
 - CSS custom properties for theme colors
-- All emulator interactions through `useEmulator` hook
-- All IndexedDB ops in `src/lib/db.ts`
+- CSS Modules (`.module.css`) for complex component-scoped styles (e.g. GameBoyShell)
+- Pointer events (`pointerdown/up/leave/cancel`) with `setPointerCapture()` for all interactive controls
+- `touch-action: none` + `preventDefault()` on all touch-interactive elements
+- `aria-label` on all interactive elements
+- All emulator interactions through `useEmulator` hook (planned — hook not yet implemented)
+- All IndexedDB ops in `src/lib/db.ts` (planned — interface only, no implementation yet)
 - **Mobile-first CSS**: base styles for mobile, `min-width` breakpoints for desktop
+- Shell button components receive `pressedButtons` prop (no internal pressed state) — `useButtonState` in page.tsx is the single source of truth
+- `useButtonState` tracks input sources (keyboard/pointer) per button — button stays pressed until all sources release
+- Shell sizing uses wrapper `transform: scale()` — all internal shell positioning remains in absolute px
 
 ## Directory Structure
-Directories are scaffolded. Only `background/PixelBackground.tsx` and `lib/constants.ts` are implemented; all other component/hook/store files are stubs.
+Most directories are scaffolded. The following are **implemented**:
+- `background/PixelBackground.tsx` — animated canvas with dithered sky, stars, clouds, fireflies
+- `emulator/GameBoyShell.tsx` + sub-components (DPad, ActionButtons, Bumpers, SystemButtons, ScreenBezel, SpeakerGrille)
+- `emulator/GameBoyShell.module.css` — 3D shell styling with press animations, responsive scaling
+- `hooks/useShellScale.ts` — ResizeObserver-based dynamic shell scaling (wrapper `transform: scale()`)
+- `app/globals.css` — full color token system (CSS custom properties)
+- `lib/constants.ts` — key mappings, GBA dimensions, breakpoints, shell geometry
+
+**Still stubs:** stores, `lib/db.ts` (interface only), `library/`, `saves/`, `settings/`, `ui/`
 ```
 src/
   app/                     # Next.js App Router
   components/
-    emulator/              # GameBoyShell, EmulatorScreen, SpeedControl, Controls, TouchControls
+    emulator/              # GameBoyShell, DPad, ActionButtons, Bumpers, SystemButtons, ScreenBezel, SpeakerGrille
     library/               # RomLibrary, RomCard, UploadRom
     saves/                 # SaveStateManager, SaveStateCard
     settings/              # SettingsPanel, KeyBindingEditor
     background/            # PixelBackground (animated canvas)
     ui/                    # Shared components
-  hooks/                   # useEmulator, useSaveStates, usePlaytime, useKeyboardControls, useMediaQuery (stubs)
+  hooks/                   # useButtonState (input source tracking), useKeyboardControls, useShellScale (dynamic sizing) — planned: useEmulator, useSaveStates, usePlaytime, useMediaQuery
   lib/
     db.ts                  # StorageProvider interface (IndexedDBProvider not yet implemented)
     constants.ts           # Default key mappings, colors, breakpoints
@@ -82,7 +98,7 @@ src/
     emulator-store.ts      # Emulator state (stub)
     ui-store.ts            # UI state — panels, modals (stub)
     settings-store.ts      # User settings — key bindings, volume, toggles (stub)
-  types/                   # index.ts
+  types/                   # GbaButton, InputSource types
 ```
 
 ## Commands
@@ -95,10 +111,8 @@ npx tsc --noEmit     # Type check
 ```
 
 ## Future Roadmap (design for these NOW, build LATER)
-Architect current code so these slot in cleanly post-MVP:
-
-- **Cloud Sync**: All IndexedDB ops behind `StorageProvider` interface in `db.ts` — MVP uses `IndexedDBProvider`, later add `CloudProvider`. ROM IDs must be content-hashed for cross-device consistency. Save state metadata must be JSON-serializable.
-- **Key Rebinding**: Key mappings in settings store (not hardcoded). Defaults in `constants.ts`, active mappings from store. `useKeyboardControls` reads from store. Touch layout positions eventually draggable.
+- **Cloud Sync**: `StorageProvider` interface in `db.ts` ready for `CloudProvider` swap. ROM IDs must be content-hashed.
+- **Key Rebinding**: Defaults in `constants.ts`, active mappings from settings store. Touch layout eventually draggable.
 
 ## Pitfalls to Avoid
 - Do NOT use `gbajs`/`gbajs2` — use `@thenick775/mgba-wasm` only
@@ -110,3 +124,4 @@ Architect current code so these slot in cleanly post-MVP:
 - Design mobile-first, NOT desktop-first
 - Touch events need `preventDefault()` to avoid double-firing
 - Test on real mobile devices, not just devtools resize
+- In useEffect cleanup, capture `ref.current` in a local variable before the return — React exhaustive-deps rule requires it

@@ -1,0 +1,515 @@
+/* ─── Shell Body (DMG-001 Vertical) ──────────────── */
+
+.shell {
+  position: relative;
+  width: 320px;
+  height: 530px;
+  background: linear-gradient(
+    180deg,
+    var(--color-shell-highlight) 0%,
+    var(--color-shell-primary) 40%,
+    var(--color-shell-secondary) 100%
+  );
+  border-radius: 12px 12px 60px 60px;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(160, 172, 140, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+  perspective: 1000px;
+  transform: rotateX(2deg);
+  transform-style: preserve-3d;
+  user-select: none;
+}
+
+/* Subtle noise texture overlay */
+.shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Shell Seam ─────────────────────────────────── */
+
+.shellSeam {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  right: 8px;
+  height: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ─── Power LED ─────────────────────────────────── */
+
+.powerLed {
+  position: absolute;
+  top: 139px;
+  left: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #551515;
+  box-shadow:
+    0 0 4px rgba(80, 20, 20, 0.5),
+    inset 0 0 2px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.powerLed[data-on='true'] {
+  background: #FF2020;
+  box-shadow:
+    0 0 6px 2px rgba(255, 32, 32, 0.8),
+    0 0 16px 4px rgba(255, 32, 32, 0.4),
+    0 0 32px 8px rgba(255, 32, 32, 0.15);
+  animation: ledPulse 3s ease-in-out infinite;
+}
+
+@keyframes ledPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 6px 2px rgba(255, 32, 32, 0.8),
+      0 0 16px 4px rgba(255, 32, 32, 0.4),
+      0 0 32px 8px rgba(255, 32, 32, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 8px 3px rgba(255, 32, 32, 0.9),
+      0 0 20px 6px rgba(255, 32, 32, 0.45),
+      0 0 40px 10px rgba(255, 32, 32, 0.2);
+  }
+}
+
+/* ─── Screen Bezel ──────────────────────────────── */
+
+.bezel {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 270px;
+  height: 195px;
+  background: var(--color-screen-bezel);
+  border-radius: 8px;
+  box-shadow:
+    inset 3px 3px 6px rgba(0, 0, 0, 0.6),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.05),
+    inset 0 0 2px rgba(0, 0, 0, 0.5),
+    0 1px 0 rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 2;
+}
+
+/* Green LCD glow when powered on */
+.bezel[data-powered='true']::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 12px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(90, 107, 42, 0.15) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.screen {
+  position: relative;
+  width: 240px;
+  height: 160px;
+  background: var(--color-screen-lcd);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  overflow: hidden;
+}
+
+.screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 1px,
+    rgba(0, 0, 0, 0.12) 1px,
+    rgba(0, 0, 0, 0.12) 2px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.screenPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+}
+
+.screenLogo {
+  font-family: var(--font-pixel), monospace;
+  font-size: 18px;
+  color: var(--color-lcd-darkest);
+  text-shadow: 0 0 8px rgba(26, 42, 8, 0.3);
+  letter-spacing: 2px;
+}
+
+.screenHint {
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  color: var(--color-lcd-dark);
+  letter-spacing: 0.5px;
+}
+
+/* ─── D-Pad ─────────────────────────────────────── */
+
+.dpad {
+  position: absolute;
+  top: 306px;
+  left: 40px;
+  width: 90px;
+  height: 90px;
+  z-index: 2;
+  perspective: 300px;
+}
+
+.dpadBody {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 60ms ease-out;
+  pointer-events: none;
+  filter:
+    drop-shadow(0 3px 0 var(--color-btn-dpad-edge))
+    drop-shadow(0 4px 3px rgba(0, 0, 0, 0.35));
+}
+
+.dpadBody[data-direction='UP'] {
+  transform: rotateX(8deg);
+}
+
+.dpadBody[data-direction='DOWN'] {
+  transform: rotateX(-8deg);
+}
+
+.dpadBody[data-direction='LEFT'] {
+  transform: rotateY(-8deg);
+}
+
+.dpadBody[data-direction='RIGHT'] {
+  transform: rotateY(8deg);
+}
+
+.dpadVertical,
+.dpadHorizontal {
+  position: absolute;
+  background: var(--color-btn-dpad);
+  border-radius: 4px;
+}
+
+.dpadVertical {
+  width: 30px;
+  height: 90px;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+}
+
+.dpadHorizontal {
+  width: 90px;
+  height: 30px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+.dpadCenter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.dpadZone {
+  position: absolute;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  touch-action: none;
+  z-index: 4;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dpadUp {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 40px;
+  border-radius: 4px 4px 0 0;
+}
+
+.dpadDown {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 40px;
+  border-radius: 0 0 4px 4px;
+}
+
+.dpadLeft {
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 30px;
+  border-radius: 4px 0 0 4px;
+}
+
+.dpadRight {
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 30px;
+  border-radius: 0 4px 4px 0;
+}
+
+/* ─── Action Buttons (A/B) — Rotated -20deg ──────── */
+
+.actionButtonGroup {
+  position: absolute;
+  top: 306px;
+  right: 36px;
+  width: 100px;
+  height: 90px;
+  transform: rotate(-20deg);
+  z-index: 2;
+}
+
+.actionBtn {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--color-btn-a);
+  transform: translateY(-4px);
+  box-shadow:
+    0 4px 0 var(--color-btn-a-edge),
+    0 6px 8px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.actionBtn[data-pressed='true'] {
+  transform: translateY(0);
+  box-shadow:
+    0 0px 0 var(--color-btn-a-edge),
+    0 1px 3px rgba(0, 0, 0, 0.25);
+  transition:
+    transform 34ms ease-out,
+    box-shadow 34ms ease-out;
+}
+
+.actionBtnLabel {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 1;
+  /* Counter-rotate so labels stay readable */
+  transform: rotate(20deg);
+}
+
+.btnA {
+  right: 0;
+  top: 4px;
+}
+
+.btnB {
+  left: 0;
+  bottom: 4px;
+}
+
+/* ─── System Buttons (Start/Select) ────────────────── */
+
+.systemButtonGroup {
+  position: absolute;
+  top: 440px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+  z-index: 2;
+}
+
+.systemBtnWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.systemBtn {
+  width: 48px;
+  height: 14px;
+  border-radius: 7px;
+  border: none;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--color-btn-start);
+  transform: translateY(-3px);
+  box-shadow:
+    0 3px 0 var(--color-btn-start-edge),
+    0 4px 6px rgba(0, 0, 0, 0.3);
+  transition:
+    transform 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.systemBtn[data-pressed='true'] {
+  transform: translateY(0);
+  box-shadow:
+    0 0px 0 var(--color-btn-start-edge),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+  transition:
+    transform 34ms ease-out,
+    box-shadow 34ms ease-out;
+}
+
+.systemBtnLabel {
+  font-family: var(--font-mono), monospace;
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: transparent;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.1),
+    0 -1px 0 rgba(0, 0, 0, 0.4);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ─── Bumpers (L/R) ─────────────────────────────── */
+
+.bumperGroup {
+  position: absolute;
+  top: -4px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.bumper {
+  width: 80px;
+  height: 20px;
+  border: none;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+  background: var(--color-shell-highlight);
+  transform: translateY(-3px);
+  box-shadow:
+    0 3px 0 var(--color-bumper-edge),
+    0 4px 6px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bumperL {
+  border-radius: 12px 6px 0 0;
+}
+
+.bumperR {
+  border-radius: 6px 12px 0 0;
+}
+
+/* Grip ridges */
+.bumper::before {
+  content: '';
+  position: absolute;
+  inset: 3px 12px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 0px,
+    rgba(0, 0, 0, 0.06) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.bumper[data-pressed='true'] {
+  transform: translateY(0);
+  box-shadow:
+    0 0px 0 var(--color-bumper-edge),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+  transition:
+    transform 34ms ease-out,
+    box-shadow 34ms ease-out;
+}
+
+.bumperLabel {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Responsive ────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .shell {
+    display: none;
+  }
+}

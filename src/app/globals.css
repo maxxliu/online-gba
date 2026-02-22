@@ -26,17 +26,39 @@
   --color-text-secondary: #8888bb;
   --color-text-muted: #555580;
 
-  /* GBA Shell */
-  --color-shell-primary: #2d1b4e;
-  --color-shell-secondary: #1e1236;
-  --color-shell-highlight: #3d2b5e;
-  --color-screen-bezel: #111122;
+  /* DMG-001 Shell */
+  --color-shell-primary: #8A9478;
+  --color-shell-secondary: #6E7A62;
+  --color-shell-highlight: #A0AC8C;
+  --color-screen-bezel: #4A4A40;
+
+  /* Screen LCD */
+  --color-screen-lcd: #5A6B2A;
+  --color-screen-lcd-active: #6B7F30;
+  --color-lcd-darkest: #1A2A08;
+  --color-lcd-dark: #3A4A1A;
+  --color-lcd-light: #8A9B5A;
+  --color-lcd-lightest: #A0B06A;
+
+  /* Power LED */
+  --color-led-on: #FF0000;
+  --color-led-off: #660000;
+
+  /* Speaker */
+  --color-speaker-slot: #5C6650;
 
   /* Buttons */
-  --color-btn-a: #ef4444;
-  --color-btn-b: #3b82f6;
-  --color-btn-start: #555580;
-  --color-btn-dpad: #333355;
+  --color-btn-a: #6E1A40;
+  --color-btn-b: #6E1A40;
+  --color-btn-start: #6A6A5C;
+  --color-btn-dpad: #2C2C44;
+
+  /* Button edges (3D depth sides) */
+  --color-btn-a-edge: #4A0E2A;
+  --color-btn-b-edge: #4A0E2A;
+  --color-btn-start-edge: #4A4A3E;
+  --color-btn-dpad-edge: #1A1A2E;
+  --color-bumper-edge: #5A6650;
 
   /* UI Surfaces */
   --color-panel-bg: rgba(15, 15, 42, 0.85);
