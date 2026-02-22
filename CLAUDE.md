@@ -7,9 +7,9 @@ A beautifully designed, browser-based Game Boy Advance emulator where users uplo
 - **Framework**: Next.js 14+ (App Router) with TypeScript
 - **Styling**: Tailwind CSS + CSS Modules for complex animations
 - **Emulator Core**: `@thenick775/mgba-wasm` (mGBA compiled to WASM) — the **only** emulator library to use
-- **State Management**: Zustand
+- **State Management**: Zustand (installed, stores are stubs — not yet wired up)
 - **Storage**: IndexedDB (via `idb` library) for save states and ROM caching
-- **Animations**: Framer Motion for UI transitions, CSS animations for pixel backgrounds
+- **Animations**: Framer Motion (installed, not yet used) + CSS animations for pixel backgrounds
 - **Deployment**: Vercel
 
 ## Critical Technical Requirements
@@ -76,21 +76,25 @@ Most directories are scaffolded. The following are **implemented**:
 - `emulator/GameBoyShell.tsx` + sub-components (DPad, ActionButtons, Bumpers, SystemButtons, ScreenBezel, SpeakerGrille)
 - `emulator/GameBoyShell.module.css` — 3D shell styling with press animations, responsive scaling
 - `hooks/useShellScale.ts` — ResizeObserver-based dynamic shell scaling (wrapper `transform: scale()`)
+- `hooks/useMediaQuery.ts` — responsive breakpoint hook (SSR-defaults to mobile)
 - `app/globals.css` — full color token system (CSS custom properties)
 - `lib/constants.ts` — key mappings, GBA dimensions, breakpoints, shell geometry
+- `emulator/TouchControls.tsx` + `TouchControls.module.css` — mobile virtual controls (portrait: 3-row layout, landscape: side columns)
+- `emulator/ScreenPlaceholder.tsx` — placeholder screen for mobile layout
+- `emulator/MobileToolbar.tsx` + `MobileToolbar.module.css` — bottom toolbar for mobile portrait
 
 **Still stubs:** stores, `lib/db.ts` (interface only), `library/`, `saves/`, `settings/`, `ui/`
 ```
 src/
   app/                     # Next.js App Router
   components/
-    emulator/              # GameBoyShell, DPad, ActionButtons, Bumpers, SystemButtons, ScreenBezel, SpeakerGrille
+    emulator/              # GameBoyShell + sub-components, TouchControls, MobileToolbar, ScreenPlaceholder
     library/               # RomLibrary, RomCard, UploadRom
     saves/                 # SaveStateManager, SaveStateCard
     settings/              # SettingsPanel, KeyBindingEditor
     background/            # PixelBackground (animated canvas)
     ui/                    # Shared components
-  hooks/                   # useButtonState (input source tracking), useKeyboardControls, useShellScale (dynamic sizing) — planned: useEmulator, useSaveStates, usePlaytime, useMediaQuery
+  hooks/                   # useButtonState (input source tracking), useKeyboardControls, useShellScale (dynamic sizing), useMediaQuery (responsive) — planned: useEmulator, useSaveStates, usePlaytime
   lib/
     db.ts                  # StorageProvider interface (IndexedDBProvider not yet implemented)
     constants.ts           # Default key mappings, colors, breakpoints
@@ -125,3 +129,5 @@ npx tsc --noEmit     # Type check
 - Touch events need `preventDefault()` to avoid double-firing
 - Test on real mobile devices, not just devtools resize
 - In useEffect cleanup, capture `ref.current` in a local variable before the return — React exhaustive-deps rule requires it
+- Do NOT conditionally render elements that carry refs used by ResizeObserver/hooks — `useMediaQuery` SSR-defaults to `isMobile: true`, so conditional returns remove desktop ref targets before hooks attach. Always render ref targets in the DOM and hide with `style={{ display: 'none' }}` instead.
+- Mobile portrait (375px viewport): ~343px usable width after padding. Verify touch control row totals fit before adding elements to a single flex row.

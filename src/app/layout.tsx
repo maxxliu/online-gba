@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Press_Start_2P, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
@@ -18,6 +18,12 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'RetroPlay - Online GBA Emulator',
   description: 'A beautifully designed, browser-based Game Boy Advance emulator',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
