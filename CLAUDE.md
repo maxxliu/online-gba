@@ -95,13 +95,19 @@ Most directories are scaffolded. The following are **implemented**:
 - `library/RomLibrary.tsx` + `.module.css` — responsive panel (desktop slide-out / mobile bottom sheet with drag-to-dismiss), search, ROM grid, delete confirmation
 - `stores/ui-store.ts` — panel state (activePanel, deleteConfirm) with Zustand + devtools
 - `stores/library-store.ts` — ROM library state (upload flow, search, CRUD) with Zustand + devtools
-- `lib/db.ts` — StorageProvider interface + IndexedDBProvider (ROM CRUD, cascading deletes, SHA-256 hashing). Save state methods are stubs.
+- `lib/db.ts` — StorageProvider interface + IndexedDBProvider (ROM CRUD, cascading deletes, SHA-256 hashing, save state CRUD, playtime tracking)
 - `stores/emulator-store.ts` — emulator state (status, currentRom, speed, volume, error) with Zustand + devtools
 - `hooks/useEmulator.ts` — mGBA lifecycle, ROM loading, button forwarding, canvas container management, visibility auto-pause
 - `hooks/useEmulatorShortcuts.ts` — speed/save/pause keyboard shortcuts (Space, 1-5, F5, F8)
+- `hooks/usePlaytime.ts` — per-ROM playtime tracking with 1s tick, 30s persist, flush on pause/quit
+- `hooks/useSaveStates.ts` — save state CRUD orchestration, auto-save cycling slots 0-2 every 5 min
+- `lib/format.ts` — shared formatters (formatRelativeTime, formatPlaytime)
+- `emulator/SpeedControl.tsx` + `.module.css` — horizontal pill bar (1x-5x) with Framer Motion animated indicator
+- `saves/SaveStateCard.tsx` + `.module.css` — filled (screenshot/timestamp/playtime/Load/Delete) and empty (Save Here) variants
+- `saves/SaveStateManager.tsx` + `.module.css` — responsive panel (desktop slides right / mobile bottom sheet), 10-slot grid, Save Now, delete confirmation
 - `types/index.ts` — GbaButton, InputSource, EmulatorStatus, RomMetadata, StoredRom, SaveState, SaveStateMetadata, PlaytimeRecord, UploadStatus/Progress
 
-**Still stubs:** `settings-store.ts`, `saves/`, `settings/`, `ui/`
+**Still stubs:** `settings-store.ts`, `settings/`, `ui/`
 ```
 public/
   mgba/                    # mgba.js + mgba.wasm copied from node_modules (NOT bundled by webpack)
@@ -114,10 +120,11 @@ src/
     settings/              # SettingsPanel, KeyBindingEditor
     background/            # PixelBackground (animated canvas)
     ui/                    # Shared components
-  hooks/                   # useButtonState, useKeyboardControls, useEmulator, useEmulatorShortcuts, useShellScale, useMediaQuery — planned: useSaveStates, usePlaytime
+  hooks/                   # useButtonState, useKeyboardControls, useEmulator, useEmulatorShortcuts, useShellScale, useMediaQuery, usePlaytime, useSaveStates
   lib/
-    db.ts                  # StorageProvider interface + IndexedDBProvider (ROM ops implemented, save state stubs)
+    db.ts                  # StorageProvider interface + IndexedDBProvider (ROM CRUD, save state CRUD, playtime, settings)
     constants.ts           # Default key mappings, colors, breakpoints, shortcuts
+    format.ts              # Shared formatters (formatRelativeTime, formatPlaytime)
     emulator-bridge.ts     # mGBA button mapping, volume conversion, dynamic import
   stores/
     emulator-store.ts      # Emulator state (status, ROM, speed, volume, error)
@@ -158,3 +165,9 @@ cp node_modules/@thenick775/mgba-wasm/dist/mgba.{js,wasm} public/mgba/
 - Mobile portrait (375px viewport): ~343px usable width after padding. Verify touch control row totals fit before adding elements to a single flex row.
 - Do NOT call Zustand store methods inside selectors (e.g. `useStore(s => s.getList())`) — returns new array refs each render, causing infinite loops. Select raw state + `useMemo` instead.
 - ESLint in this project rejects underscore-prefixed unused params (`_param`). For stub methods, use `// eslint-disable-next-line @typescript-eslint/no-unused-vars` on the line above.
+- mGBA `gameName` property is not in the TypeScript types — access via `(mod as unknown as Record<string, unknown>).gameName`. VFS save state path: `/data/states/{basename}.ss{slot}` where basename = gameName stripped of path + extension.
+- When reading VFS files (e.g. save states), MUST copy to a new ArrayBuffer: `new Uint8Array(data).buffer.slice(0)` — WASM shared memory can relocate, making the original reference invalid.
+- For `<img>` with data URLs (e.g. save state screenshots), use native `<img>` with `/* eslint-disable-next-line @next/next/no-img-element */` — `next/image` doesn't handle data URLs and `image-rendering: pixelated` is needed.
+- To exclude a field during destructuring without triggering unused-var lint, explicitly pick needed fields instead of `{ data: _data, ...rest }` — ESLint rejects underscore prefixes.
+- Panel slide directions: Library slides from **left**, Saves slides from **right** — keep visually distinct. New panels should pick a consistent side.
+- Save state IDs use deterministic format `${romId}-slot-${slot}` — enables upsert and ID parsing with regex `^(.+)-slot-(\d+)$`.

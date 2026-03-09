@@ -42,6 +42,7 @@ export interface SaveState {
 }
 
 export interface SaveStateMetadata {
+  id?: string;
   romId: string;
   slot: number;
   createdAt: number;

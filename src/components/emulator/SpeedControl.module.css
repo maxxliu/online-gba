@@ -1,0 +1,49 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 28px;
+  background: var(--color-card-bg);
+  border-radius: 14px;
+  padding: 2px;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.segment {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 24px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.indicator {
+  position: absolute;
+  inset: 0;
+  background: var(--color-teal);
+  border-radius: 12px;
+  opacity: 0.25;
+}
+
+.label {
+  position: relative;
+  z-index: 1;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  pointer-events: none;
+}
+
+.segment:hover .label {
+  color: var(--color-text);
+}

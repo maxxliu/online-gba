@@ -32,6 +32,11 @@ export const DEFAULT_SHORTCUTS: Record<string, string> = {
   loadState: 'F8',
 };
 
+export const AUTO_SAVE_INTERVAL_MS = 300_000; // 5 minutes
+export const PLAYTIME_PERSIST_INTERVAL_MS = 30_000; // 30 seconds
+export const AUTO_SAVE_SLOTS = [0, 1, 2] as const;
+export const TOTAL_SAVE_SLOTS = 10;
+
 export const GBA_SHELL = {
   body: { width: 320, height: 530 },
   bezel: { width: 270, height: 195 },

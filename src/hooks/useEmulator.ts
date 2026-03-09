@@ -259,6 +259,42 @@ export function useEmulator({ desktopScreenRef, mobileScreenRef, isMobile }: Use
     return mod.loadState(slot);
   }, []);
 
+  const saveStateToVfs = useCallback((slot: number): ArrayBuffer | null => {
+    const mod = moduleRef.current;
+    if (!mod) return null;
+    const success = mod.saveState(slot);
+    if (!success) return null;
+    try {
+      // Derive state file path from gameName
+      const gameName: string = (mod as unknown as Record<string, unknown>).gameName as string ?? '';
+      const basename = gameName.replace(/^.*[\\/]/, '').replace(/\.[^.]+$/, '');
+      const statePath = `/data/states/${basename}.ss${slot}`;
+      const data = mod.FS.readFile(statePath);
+      // Copy to new ArrayBuffer to avoid referencing shared WASM memory
+      return new Uint8Array(data).buffer.slice(0);
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const loadStateFromData = useCallback((slot: number, data: ArrayBuffer): boolean => {
+    const mod = moduleRef.current;
+    if (!mod) return false;
+    try {
+      const gameName: string = (mod as unknown as Record<string, unknown>).gameName as string ?? '';
+      const basename = gameName.replace(/^.*[\\/]/, '').replace(/\.[^.]+$/, '');
+      const statePath = `/data/states/${basename}.ss${slot}`;
+      mod.FS.writeFile(statePath, new Uint8Array(data));
+      return mod.loadState(slot);
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const getScreenshot = useCallback((): string | null => {
+    return canvasRef.current?.toDataURL('image/png') ?? null;
+  }, []);
+
   const pressButton = useCallback((name: string) => {
     const mod = moduleRef.current;
     if (!mod) return;
@@ -282,6 +318,9 @@ export function useEmulator({ desktopScreenRef, mobileScreenRef, isMobile }: Use
     setVolume,
     saveState,
     loadState,
+    saveStateToVfs,
+    loadStateFromData,
+    getScreenshot,
     pressButton,
     releaseButton,
     resumeAudioContext,

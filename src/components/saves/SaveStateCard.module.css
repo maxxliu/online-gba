@@ -1,0 +1,126 @@
+.card {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cardEmpty {
+  background: transparent;
+  border: 1px dashed var(--color-text-muted);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+}
+
+.emptyContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.emptyLabel {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.cardTop {
+  display: flex;
+  gap: 10px;
+}
+
+.thumbnail {
+  width: 120px;
+  height: 80px;
+  border-radius: 4px;
+  object-fit: cover;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  flex-shrink: 0;
+  background: var(--color-bg-darkest);
+}
+
+.thumbnailPlaceholder {
+  width: 120px;
+  height: 80px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: var(--color-bg-darkest);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.slotBadge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--color-bg-light);
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.timestamp {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.playtime {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.cardActions {
+  display: flex;
+  gap: 6px;
+}
+
+.loadBtn,
+.saveBtn {
+  flex: 1;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-teal);
+  color: var(--color-bg-darkest);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.loadBtn:hover,
+.saveBtn:hover {
+  opacity: 0.85;
+}
+
+.deleteBtn {
+  padding: 6px 10px;
+  border: 1px solid var(--color-panel-border);
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.deleteBtn:hover {
+  color: var(--color-red);
+  border-color: var(--color-red);
+}

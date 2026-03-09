@@ -145,26 +145,37 @@ class IndexedDBProvider implements StorageProvider {
     await tx.done;
   }
 
-  // ── Save State Operations (stubs) ───────────────
+  // ── Save State Operations ──────────────────────────
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async saveSaveState(romId: string, slot: number, data: ArrayBuffer, metadata: SaveStateMetadata): Promise<void> {
-    // Stub — will be implemented when save states feature is built
+    const db = await this.getDB();
+    const id = `${romId}-slot-${slot}`;
+    await db.put('saveStates', { ...metadata, id, romId, slot, data });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async loadSaveState(romId: string, slot: number): Promise<ArrayBuffer | null> {
-    return null;
+    const db = await this.getDB();
+    const id = `${romId}-slot-${slot}`;
+    const record = await db.get('saveStates', id);
+    return record?.data ?? null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async listSaveStates(romId: string): Promise<SaveStateMetadata[]> {
-    return [];
+    const db = await this.getDB();
+    const records = await db.getAllFromIndex('saveStates', 'by-romId', romId);
+    return records
+      .map((record) => {
+        const { romId, slot, createdAt, playtime, screenshotDataUrl } = record;
+        const id = record.id ?? `${romId}-slot-${slot}`;
+        return { id, romId, slot, createdAt, playtime, screenshotDataUrl };
+      })
+      .sort((a, b) => b.createdAt - a.createdAt);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async deleteSaveState(romId: string, slot: number): Promise<void> {
-    // Stub
+    const db = await this.getDB();
+    const id = `${romId}-slot-${slot}`;
+    await db.delete('saveStates', id);
   }
 
   // ── Settings ────────────────────────────────────

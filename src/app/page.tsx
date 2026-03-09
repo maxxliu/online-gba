@@ -1,16 +1,20 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { PixelBackground } from '@/components/background/PixelBackground';
 import { GameBoyShell } from '@/components/emulator/GameBoyShell';
 import { ScreenPlaceholder } from '@/components/emulator/ScreenPlaceholder';
 import { TouchControls } from '@/components/emulator/TouchControls';
 import { MobileToolbar } from '@/components/emulator/MobileToolbar';
+import { SpeedControl } from '@/components/emulator/SpeedControl';
 import { RomLibrary } from '@/components/library/RomLibrary';
+import { SaveStateManager } from '@/components/saves/SaveStateManager';
 import { useButtonState } from '@/hooks/useButtonState';
 import { useKeyboardControls } from '@/hooks/useKeyboardControls';
 import { useEmulator } from '@/hooks/useEmulator';
 import { useEmulatorShortcuts } from '@/hooks/useEmulatorShortcuts';
+import { usePlaytime } from '@/hooks/usePlaytime';
+import { useSaveStates } from '@/hooks/useSaveStates';
 import { useShellScale } from '@/hooks/useShellScale';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useUiStore } from '@/stores/ui-store';
@@ -27,10 +31,28 @@ export default function Home() {
   const closePanel = useUiStore((s) => s.closePanel);
 
   const emulatorStatus = useEmulatorStore((s) => s.status);
+  const emulatorSpeed = useEmulatorStore((s) => s.speed);
   const emulatorError = useEmulatorStore((s) => s.error);
+  const currentRomId = useEmulatorStore((s) => s.currentRomId);
+  const activePanel = useUiStore((s) => s.activePanel);
   const isPlaying = emulatorStatus === 'running' || emulatorStatus === 'paused';
 
   const emulator = useEmulator({ desktopScreenRef, mobileScreenRef, isMobile });
+  const { getCurrentPlaytime } = usePlaytime();
+  const saveStates = useSaveStates({
+    saveStateToVfs: emulator.saveStateToVfs,
+    loadStateFromData: emulator.loadStateFromData,
+    getScreenshot: emulator.getScreenshot,
+    getCurrentPlaytime,
+  });
+
+  // Load save states list when saves panel opens
+  useEffect(() => {
+    if (activePanel === 'saves' && currentRomId) {
+      saveStates.loadList(currentRomId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePanel, currentRomId]);
 
   const { pressedButtons, press, release, releaseAll } = useButtonState({
     onButtonPress: emulator.pressButton,
@@ -97,7 +119,11 @@ export default function Home() {
                 {!isPlaying && <ScreenPlaceholder variant="mobile" error={emulatorError} />}
               </div>
             </div>
-            <div className="mobile-speed-bar" />
+            <div className="mobile-speed-bar">
+              {isPlaying && (
+                <SpeedControl currentSpeed={emulatorSpeed} onSpeedChange={emulator.setSpeed} />
+              )}
+            </div>
             <TouchControls
               layout="portrait"
               onButtonPress={handlePointerPress}
@@ -105,7 +131,10 @@ export default function Home() {
               pressedButtons={pressedButtons}
             />
           </div>
-          <MobileToolbar onLibraryPress={() => togglePanel('library')} />
+          <MobileToolbar
+            onLibraryPress={() => togglePanel('library')}
+            onSavesPress={() => togglePanel('saves')}
+          />
         </>
       )}
 
@@ -127,6 +156,11 @@ export default function Home() {
             </div>
           </GameBoyShell>
         </div>
+        {isPlaying && (
+          <div style={{ marginTop: 12 }}>
+            <SpeedControl currentSpeed={emulatorSpeed} onSpeedChange={emulator.setSpeed} />
+          </div>
+        )}
       </div>
 
       {/* ─── Desktop Library FAB ─────────────────────── */}
@@ -140,8 +174,28 @@ export default function Home() {
         Library
       </button>
 
+      {/* ─── Desktop Saves FAB ──────────────────────── */}
+      <button
+        className="saves-fab font-pixel"
+        onClick={() => togglePanel('saves')}
+        aria-label="Open saves"
+        type="button"
+        style={isMobile ? { display: 'none' } : undefined}
+      >
+        Saves
+      </button>
+
       {/* ─── Library Panel ───────────────────────────── */}
       <RomLibrary onPlayRom={handlePlayRom} />
+
+      {/* ─── Saves Panel ─────────────────────────────── */}
+      <SaveStateManager
+        states={saveStates.states}
+        loading={saveStates.loading}
+        onSave={saveStates.saveToSlot}
+        onLoad={saveStates.loadFromSlot}
+        onDelete={saveStates.deleteSlot}
+      />
     </>
   );
 }
