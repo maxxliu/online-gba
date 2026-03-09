@@ -7,9 +7,9 @@ A beautifully designed, browser-based Game Boy Advance emulator where users uplo
 - **Framework**: Next.js 14+ (App Router) with TypeScript
 - **Styling**: Tailwind CSS + CSS Modules for complex animations
 - **Emulator Core**: `@thenick775/mgba-wasm` (mGBA compiled to WASM) — the **only** emulator library to use
-- **State Management**: Zustand (installed, stores are stubs — not yet wired up)
-- **Storage**: IndexedDB (via `idb` library) for save states and ROM caching
-- **Animations**: Framer Motion (installed, not yet used) + CSS animations for pixel backgrounds
+- **State Management**: Zustand with devtools middleware
+- **Storage**: IndexedDB (via `idb` library) for ROMs, save states, settings, playtime — content-addressed with SHA-256
+- **Animations**: Framer Motion (panels, cards) + CSS animations for pixel backgrounds
 - **Deployment**: Vercel
 
 ## Critical Technical Requirements
@@ -23,18 +23,24 @@ Cross-Origin-Embedder-Policy: require-corp
 Already configured in `next.config.js` headers. Non-negotiable — the emulator will not work without it.
 
 ### Emulator Core API (mgba-wasm)
-Approximate API — verify against `@thenick775/mgba-wasm@2.4.1` source before use:
+Verified API for `@thenick775/mgba-wasm@2.4.1`:
 ```typescript
 Module.FSInit()                          // Initialize filesystem
-Module.loadGame(romPath)                 // Load a ROM
+Module.filePaths()                       // Returns { gamePath, savePath, saveStatePath, ... }
+Module.loadGame(romPath)                 // Load a ROM (returns boolean)
 Module.saveState(slot)                   // Save state to slot (0-9)
 Module.loadState(slot)                   // Load state from slot
-Module.setFastForwardMultiplier(n)       // Set speed (2, 3, 4, 5)
+Module.setFastForwardMultiplier(n)       // Set speed (1=normal, 2+=fast)
 Module.pauseGame() / Module.resumeGame() // Pause / Resume
 Module.quitGame()                        // Quit current game
-Module.buttonPress(name)                 // Press button
+Module.buttonPress(name)                 // Press button (case-insensitive: 'a','b','start','select','up','down','left','right','l','r')
 Module.buttonUnpress(name)               // Release button
-Module.setVolume(percent)                // 0-100
+Module.setVolume(multiplier)             // 0.0-2.0 (NOT 0-100; 1.0 = 100%)
+Module.toggleInput(enabled)              // Enable/disable built-in keyboard handling
+Module.addCoreCallbacks({...})           // Register crash/save/frame callbacks
+Module.FS.writeFile(path, data)          // Write to virtual filesystem
+Module.FSSync()                          // Sync VFS to IndexedDB
+Module.SDL2.audioContext                 // Web Audio context (resume after user interaction)
 Module.uploadRom(file, callback)         // Upload ROM file
 Module.screenshot(fileName)              // Take screenshot
 Module.getSave()                         // Get save data
@@ -63,8 +69,9 @@ Mobile-first. Every component designed for touch first, enhanced for desktop.
 - Pointer events (`pointerdown/up/leave/cancel`) with `setPointerCapture()` for all interactive controls
 - `touch-action: none` + `preventDefault()` on all touch-interactive elements
 - `aria-label` on all interactive elements
-- All emulator interactions through `useEmulator` hook (planned — hook not yet implemented)
-- All IndexedDB ops in `src/lib/db.ts` (planned — interface only, no implementation yet)
+- All emulator interactions through `useEmulator` hook (implemented)
+- All IndexedDB ops through `storage` singleton from `src/lib/db.ts` (IndexedDBProvider implemented)
+- Zustand stores: select primitive/stable values in components, derive filtered lists with `useMemo` — do NOT call store methods (e.g. `getFilteredRoms()`) inside selectors (creates new refs → infinite re-renders)
 - **Mobile-first CSS**: base styles for mobile, `min-width` breakpoints for desktop
 - Shell button components receive `pressedButtons` prop (no internal pressed state) — `useButtonState` in page.tsx is the single source of truth
 - `useButtonState` tracks input sources (keyboard/pointer) per button — button stays pressed until all sources release
@@ -78,13 +85,26 @@ Most directories are scaffolded. The following are **implemented**:
 - `hooks/useShellScale.ts` — ResizeObserver-based dynamic shell scaling (wrapper `transform: scale()`)
 - `hooks/useMediaQuery.ts` — responsive breakpoint hook (SSR-defaults to mobile)
 - `app/globals.css` — full color token system (CSS custom properties)
-- `lib/constants.ts` — key mappings, GBA dimensions, breakpoints, shell geometry
+- `lib/constants.ts` — key mappings, GBA dimensions, breakpoints, shell geometry, emulator shortcuts
+- `lib/emulator-bridge.ts` — mGBA button name mapping, volume conversion, dynamic import helper
 - `emulator/TouchControls.tsx` + `TouchControls.module.css` — mobile virtual controls (portrait: 3-row layout, landscape: side columns)
 - `emulator/ScreenPlaceholder.tsx` — placeholder screen for mobile layout
 - `emulator/MobileToolbar.tsx` + `MobileToolbar.module.css` — bottom toolbar for mobile portrait
+- `library/UploadRom.tsx` + `.module.css` — drag-and-drop upload with status state machine (idle/reading/hashing/storing/done/error)
+- `library/RomCard.tsx` + `.module.css` — ROM card with Framer Motion animations, play/delete buttons
+- `library/RomLibrary.tsx` + `.module.css` — responsive panel (desktop slide-out / mobile bottom sheet with drag-to-dismiss), search, ROM grid, delete confirmation
+- `stores/ui-store.ts` — panel state (activePanel, deleteConfirm) with Zustand + devtools
+- `stores/library-store.ts` — ROM library state (upload flow, search, CRUD) with Zustand + devtools
+- `lib/db.ts` — StorageProvider interface + IndexedDBProvider (ROM CRUD, cascading deletes, SHA-256 hashing). Save state methods are stubs.
+- `stores/emulator-store.ts` — emulator state (status, currentRom, speed, volume, error) with Zustand + devtools
+- `hooks/useEmulator.ts` — mGBA lifecycle, ROM loading, button forwarding, canvas container management, visibility auto-pause
+- `hooks/useEmulatorShortcuts.ts` — speed/save/pause keyboard shortcuts (Space, 1-5, F5, F8)
+- `types/index.ts` — GbaButton, InputSource, EmulatorStatus, RomMetadata, StoredRom, SaveState, SaveStateMetadata, PlaytimeRecord, UploadStatus/Progress
 
-**Still stubs:** stores, `lib/db.ts` (interface only), `library/`, `saves/`, `settings/`, `ui/`
+**Still stubs:** `settings-store.ts`, `saves/`, `settings/`, `ui/`
 ```
+public/
+  mgba/                    # mgba.js + mgba.wasm copied from node_modules (NOT bundled by webpack)
 src/
   app/                     # Next.js App Router
   components/
@@ -94,15 +114,17 @@ src/
     settings/              # SettingsPanel, KeyBindingEditor
     background/            # PixelBackground (animated canvas)
     ui/                    # Shared components
-  hooks/                   # useButtonState (input source tracking), useKeyboardControls, useShellScale (dynamic sizing), useMediaQuery (responsive) — planned: useEmulator, useSaveStates, usePlaytime
+  hooks/                   # useButtonState, useKeyboardControls, useEmulator, useEmulatorShortcuts, useShellScale, useMediaQuery — planned: useSaveStates, usePlaytime
   lib/
-    db.ts                  # StorageProvider interface (IndexedDBProvider not yet implemented)
-    constants.ts           # Default key mappings, colors, breakpoints
+    db.ts                  # StorageProvider interface + IndexedDBProvider (ROM ops implemented, save state stubs)
+    constants.ts           # Default key mappings, colors, breakpoints, shortcuts
+    emulator-bridge.ts     # mGBA button mapping, volume conversion, dynamic import
   stores/
-    emulator-store.ts      # Emulator state (stub)
-    ui-store.ts            # UI state — panels, modals (stub)
+    emulator-store.ts      # Emulator state (status, ROM, speed, volume, error)
+    ui-store.ts            # UI state — activePanel, deleteConfirm (implemented)
+    library-store.ts       # ROM library — upload, search, CRUD (implemented)
     settings-store.ts      # User settings — key bindings, volume, toggles (stub)
-  types/                   # GbaButton, InputSource types
+  types/                   # GbaButton, InputSource, RomMetadata, StoredRom, SaveState, UploadStatus/Progress types
 ```
 
 ## Commands
@@ -112,6 +134,8 @@ npm run dev          # Dev server
 npm run build        # Production build
 npm run lint         # ESLint
 npx tsc --noEmit     # Type check
+# After upgrading @thenick775/mgba-wasm:
+cp node_modules/@thenick775/mgba-wasm/dist/mgba.{js,wasm} public/mgba/
 ```
 
 ## Future Roadmap (design for these NOW, build LATER)
@@ -121,8 +145,9 @@ npx tsc --noEmit     # Type check
 ## Pitfalls to Avoid
 - Do NOT use `gbajs`/`gbajs2` — use `@thenick775/mgba-wasm` only
 - Do NOT forget COOP/COEP headers
+- Do NOT import `@thenick775/mgba-wasm` through webpack/Next.js bundling — Emscripten's pthread workers fail with `_N_E is not defined`. The files are copied to `public/mgba/` and loaded via `Function('return import("/mgba/mgba.js")')()` to bypass webpack. When upgrading mgba-wasm, re-copy `dist/mgba.js` and `dist/mgba.wasm` to `public/mgba/`.
 - Do NOT store ROM data in React state — use IndexedDB
-- Do NOT render canvas with React re-renders — use refs
+- Do NOT render canvas with React re-renders — use refs. The emulator canvas is created imperatively via `document.createElement('canvas')` and moved between desktop/mobile containers with `appendChild`.
 - Canvas: 240x160 native, scaled via CSS with `image-rendering: pixelated`
 - Audio context must resume after user interaction
 - Design mobile-first, NOT desktop-first
@@ -131,3 +156,5 @@ npx tsc --noEmit     # Type check
 - In useEffect cleanup, capture `ref.current` in a local variable before the return — React exhaustive-deps rule requires it
 - Do NOT conditionally render elements that carry refs used by ResizeObserver/hooks — `useMediaQuery` SSR-defaults to `isMobile: true`, so conditional returns remove desktop ref targets before hooks attach. Always render ref targets in the DOM and hide with `style={{ display: 'none' }}` instead.
 - Mobile portrait (375px viewport): ~343px usable width after padding. Verify touch control row totals fit before adding elements to a single flex row.
+- Do NOT call Zustand store methods inside selectors (e.g. `useStore(s => s.getList())`) — returns new array refs each render, causing infinite loops. Select raw state + `useMemo` instead.
+- ESLint in this project rejects underscore-prefixed unused params (`_param`). For stub methods, use `// eslint-disable-next-line @typescript-eslint/no-unused-vars` on the line above.

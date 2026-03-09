@@ -21,6 +21,17 @@ export const BREAKPOINTS = {
   tablet: 1024,
 } as const;
 
+export const DEFAULT_SHORTCUTS: Record<string, string> = {
+  togglePause: ' ',       // Space
+  speed1: '1',
+  speed2: '2',
+  speed3: '3',
+  speed4: '4',
+  speed5: '5',
+  saveState: 'F5',
+  loadState: 'F8',
+};
+
 export const GBA_SHELL = {
   body: { width: 320, height: 530 },
   bezel: { width: 270, height: 195 },
