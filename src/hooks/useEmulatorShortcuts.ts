@@ -2,12 +2,14 @@
 
 import { useEffect } from 'react';
 import { DEFAULT_SHORTCUTS } from '@/lib/constants';
+import type { Shortcuts } from '@/types';
 
 interface UseEmulatorShortcutsOptions {
   togglePause: () => void;
   setSpeed: (n: number) => void;
   saveState: (slot: number) => boolean;
   loadState: (slot: number) => boolean;
+  shortcuts?: Shortcuts;
   enabled?: boolean;
 }
 
@@ -16,8 +18,11 @@ export function useEmulatorShortcuts({
   setSpeed,
   saveState,
   loadState,
+  shortcuts,
   enabled = true,
 }: UseEmulatorShortcutsOptions) {
+  const activeShortcuts = shortcuts ?? DEFAULT_SHORTCUTS;
+
   useEffect(() => {
     if (!enabled) return;
 
@@ -35,19 +40,19 @@ export function useEmulatorShortcuts({
 
       const key = e.key;
 
-      if (key === DEFAULT_SHORTCUTS.togglePause) {
+      if (key === activeShortcuts.togglePause) {
         e.preventDefault();
         togglePause();
         return;
       }
 
-      if (key === DEFAULT_SHORTCUTS.saveState) {
+      if (key === activeShortcuts.saveState) {
         e.preventDefault();
         saveState(0);
         return;
       }
 
-      if (key === DEFAULT_SHORTCUTS.loadState) {
+      if (key === activeShortcuts.loadState) {
         e.preventDefault();
         loadState(0);
         return;
@@ -55,7 +60,8 @@ export function useEmulatorShortcuts({
 
       // Speed keys 1-5
       for (let i = 1; i <= 5; i++) {
-        if (key === String(i) && DEFAULT_SHORTCUTS[`speed${i}`] === key) {
+        const speedKey = `speed${i}` as keyof typeof activeShortcuts;
+        if (key === activeShortcuts[speedKey]) {
           e.preventDefault();
           setSpeed(i);
           return;
@@ -65,5 +71,5 @@ export function useEmulatorShortcuts({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [enabled, togglePause, setSpeed, saveState, loadState]);
+  }, [enabled, togglePause, setSpeed, saveState, loadState, activeShortcuts]);
 }

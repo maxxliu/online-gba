@@ -136,7 +136,7 @@
   overflow: hidden;
 }
 
-.screen::after {
+.screenScanlines::after {
   content: '';
   position: absolute;
   inset: 0;

@@ -2,11 +2,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  height: 28px;
+  gap: 0;
+  height: 14px;
   background: var(--color-card-bg);
-  border-radius: 14px;
-  padding: 2px;
+  border-radius: 7px;
+  padding: 1px;
   width: fit-content;
   margin: 0 auto;
 }
@@ -16,10 +16,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 24px;
+  width: 22px;
+  height: 12px;
   border: none;
-  border-radius: 12px;
+  border-radius: 6px;
   background: none;
   cursor: pointer;
   padding: 0;
@@ -30,14 +30,14 @@
   position: absolute;
   inset: 0;
   background: var(--color-teal);
-  border-radius: 12px;
+  border-radius: 6px;
   opacity: 0.25;
 }
 
 .label {
   position: relative;
   z-index: 1;
-  font-size: 11px;
+  font-size: 7px;
   font-weight: 600;
   color: var(--color-text-secondary);
   font-family: inherit;

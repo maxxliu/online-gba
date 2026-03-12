@@ -70,6 +70,40 @@ export interface PlaytimeRecord {
   lastPlayed: number;
 }
 
+// ─── Settings ────────────────────────────────
+
+export interface KeyBindings {
+  A: string;
+  B: string;
+  L: string;
+  R: string;
+  START: string;
+  SELECT: string;
+  UP: string;
+  DOWN: string;
+  LEFT: string;
+  RIGHT: string;
+}
+
+export interface Shortcuts {
+  togglePause: string;
+  speed1: string;
+  speed2: string;
+  speed3: string;
+  speed4: string;
+  speed5: string;
+  saveState: string;
+  loadState: string;
+}
+
+export interface UserSettings {
+  keyBindings: KeyBindings;
+  shortcuts: Shortcuts;
+  volume: number;
+  scanlinesEnabled: boolean;
+  backgroundAnimationEnabled: boolean;
+}
+
 // ─── Upload ─────────────────────────────────────
 
 export type UploadStatus =

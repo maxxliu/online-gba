@@ -497,7 +497,11 @@ function drawScanlines(ctx: CanvasRenderingContext2D, w: number, h: number) {
 
 // --- Component ---
 
-export function PixelBackground() {
+interface PixelBackgroundProps {
+  animationEnabled?: boolean;
+}
+
+export function PixelBackground({ animationEnabled = true }: PixelBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number>(0);
@@ -511,6 +515,7 @@ export function PixelBackground() {
   const reducedMotionRef = useRef(false);
   const visibleRef = useRef(true);
   const isMobileRef = useRef(false);
+  const animationEnabledRef = useRef(animationEnabled);
 
   const resize = useCallback(() => {
     const canvas = canvasRef.current;
@@ -542,7 +547,7 @@ export function PixelBackground() {
   }, []);
 
   const animate = useCallback((timestamp: number) => {
-    if (!visibleRef.current) return;
+    if (!visibleRef.current || !animationEnabledRef.current) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -608,6 +613,21 @@ export function PixelBackground() {
 
     rafRef.current = requestAnimationFrame(animate);
   }, []);
+
+  // Pause/resume animation when prop changes
+  useEffect(() => {
+    const wasEnabled = animationEnabledRef.current;
+    animationEnabledRef.current = animationEnabled;
+
+    if (animationEnabled && !wasEnabled && visibleRef.current) {
+      // Resuming — restart animation loop
+      lastFrameTimeRef.current = performance.now();
+      rafRef.current = requestAnimationFrame(animate);
+    } else if (!animationEnabled && wasEnabled) {
+      // Pausing — stop animation loop (last frame stays rendered)
+      cancelAnimationFrame(rafRef.current);
+    }
+  }, [animationEnabled, animate]);
 
   useEffect(() => {
     const isMobile = window.innerWidth < BREAKPOINTS.mobile;

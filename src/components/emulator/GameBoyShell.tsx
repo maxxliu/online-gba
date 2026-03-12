@@ -14,6 +14,7 @@ interface GameBoyShellProps {
   onButtonRelease?: (name: string) => void;
   pressedButtons?: Record<string, boolean>;
   isPoweredOn?: boolean;
+  scanlinesEnabled?: boolean;
   children?: ReactNode;
 }
 
@@ -22,6 +23,7 @@ export function GameBoyShell({
   onButtonRelease,
   pressedButtons,
   isPoweredOn = false,
+  scanlinesEnabled = false,
   children,
 }: GameBoyShellProps) {
   return (
@@ -32,7 +34,7 @@ export function GameBoyShell({
         data-on={isPoweredOn}
         aria-label={isPoweredOn ? 'Power on' : 'Power off'}
       />
-      <ScreenBezel isPoweredOn={isPoweredOn}>{children}</ScreenBezel>
+      <ScreenBezel isPoweredOn={isPoweredOn} scanlinesEnabled={scanlinesEnabled}>{children}</ScreenBezel>
       <div className={styles.shellSeam} />
       <DPad onButtonPress={onButtonPress} onButtonRelease={onButtonRelease} pressedButtons={pressedButtons} />
       <ActionButtons onButtonPress={onButtonPress} onButtonRelease={onButtonRelease} pressedButtons={pressedButtons} />

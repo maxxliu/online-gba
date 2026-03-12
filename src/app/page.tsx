@@ -9,6 +9,7 @@ import { MobileToolbar } from '@/components/emulator/MobileToolbar';
 import { SpeedControl } from '@/components/emulator/SpeedControl';
 import { RomLibrary } from '@/components/library/RomLibrary';
 import { SaveStateManager } from '@/components/saves/SaveStateManager';
+import { SettingsPanel } from '@/components/settings/SettingsPanel';
 import { useButtonState } from '@/hooks/useButtonState';
 import { useKeyboardControls } from '@/hooks/useKeyboardControls';
 import { useEmulator } from '@/hooks/useEmulator';
@@ -19,6 +20,7 @@ import { useShellScale } from '@/hooks/useShellScale';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useUiStore } from '@/stores/ui-store';
 import { useEmulatorStore } from '@/stores/emulator-store';
+import { useSettingsStore } from '@/stores/settings-store';
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -37,6 +39,17 @@ export default function Home() {
   const activePanel = useUiStore((s) => s.activePanel);
   const isPlaying = emulatorStatus === 'running' || emulatorStatus === 'paused';
 
+  const settingsKeyBindings = useSettingsStore((s) => s.keyBindings);
+  const settingsShortcuts = useSettingsStore((s) => s.shortcuts);
+  const settingsVolume = useSettingsStore((s) => s.volume);
+  const scanlinesEnabled = useSettingsStore((s) => s.scanlinesEnabled);
+  const backgroundAnimationEnabled = useSettingsStore((s) => s.backgroundAnimationEnabled);
+
+  // Hydrate settings from IndexedDB on mount
+  useEffect(() => {
+    useSettingsStore.getState().hydrate();
+  }, []);
+
   const emulator = useEmulator({ desktopScreenRef, mobileScreenRef, isMobile });
   const { getCurrentPlaytime } = usePlaytime();
   const saveStates = useSaveStates({
@@ -54,17 +67,24 @@ export default function Home() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePanel, currentRomId]);
 
+  // Sync volume from settings to emulator
+  useEffect(() => {
+    emulator.setVolume(settingsVolume);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settingsVolume]);
+
   const { pressedButtons, press, release, releaseAll } = useButtonState({
     onButtonPress: emulator.pressButton,
     onButtonRelease: emulator.releaseButton,
   });
 
-  useKeyboardControls({ press, release, releaseAll });
+  useKeyboardControls({ press, release, releaseAll, keyBindings: settingsKeyBindings as unknown as Record<string, string> });
   useEmulatorShortcuts({
     togglePause: emulator.togglePause,
     setSpeed: emulator.setSpeed,
     saveState: emulator.saveState,
     loadState: emulator.loadState,
+    shortcuts: settingsShortcuts,
     enabled: isPlaying,
   });
 
@@ -89,9 +109,11 @@ export default function Home() {
     [emulator, closePanel],
   );
 
+  const scanlinesClass = scanlinesEnabled ? 'scanlines-enabled' : 'scanlines-disabled';
+
   return (
-    <>
-      <PixelBackground />
+    <div className={scanlinesClass}>
+      <PixelBackground animationEnabled={backgroundAnimationEnabled} />
 
       {/* ─── Mobile Landscape ──────────────────────────── */}
       {isMobile && isLandscape && (
@@ -134,6 +156,7 @@ export default function Home() {
           <MobileToolbar
             onLibraryPress={() => togglePanel('library')}
             onSavesPress={() => togglePanel('saves')}
+            onSettingsPress={() => togglePanel('settings')}
           />
         </>
       )}
@@ -144,23 +167,24 @@ export default function Home() {
         className="relative z-10 flex min-h-screen flex-col items-center justify-center"
         style={isMobile ? { display: 'none' } : undefined}
       >
-        <div style={{ transform: `scale(${scale})`, transformOrigin: 'center' }}>
+        <div style={{ transform: `scale(${scale})`, transformOrigin: 'center', position: 'relative' }}>
           <GameBoyShell
             onButtonPress={handlePointerPress}
             onButtonRelease={handlePointerRelease}
             pressedButtons={pressedButtons}
             isPoweredOn={isPlaying}
+            scanlinesEnabled={scanlinesEnabled}
           >
             <div ref={desktopScreenRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
               {!isPlaying && <ScreenPlaceholder error={emulatorError} />}
             </div>
           </GameBoyShell>
+          {isPlaying && (
+            <div style={{ position: 'absolute', top: 244, left: 0, right: 0, zIndex: 3 }}>
+              <SpeedControl currentSpeed={emulatorSpeed} onSpeedChange={emulator.setSpeed} />
+            </div>
+          )}
         </div>
-        {isPlaying && (
-          <div style={{ marginTop: 12 }}>
-            <SpeedControl currentSpeed={emulatorSpeed} onSpeedChange={emulator.setSpeed} />
-          </div>
-        )}
       </div>
 
       {/* ─── Desktop Library FAB ─────────────────────── */}
@@ -185,6 +209,19 @@ export default function Home() {
         Saves
       </button>
 
+      {/* ─── Desktop Settings FAB ────────────────────── */}
+      <button
+        className="settings-fab"
+        onClick={() => togglePanel('settings')}
+        aria-label="Settings"
+        type="button"
+        style={isMobile ? { display: 'none' } : undefined}
+      >
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M11.1 1.5l.7 2.1c.4.2.8.4 1.2.6l2.1-.5 1.5 1.5-.5 2.1c.3.4.5.8.6 1.2l2.1.7v2.1l-2.1.7c-.2.4-.4.8-.6 1.2l.5 2.1-1.5 1.5-2.1-.5c-.4.3-.8.5-1.2.6l-.7 2.1H8.9l-.7-2.1c-.4-.2-.8-.4-1.2-.6l-2.1.5-1.5-1.5.5-2.1c-.3-.4-.5-.8-.6-1.2L1.2 11V8.9l2.1-.7c.2-.4.4-.8.6-1.2l-.5-2.1L4.9 3.4l2.1.5c.4-.3.8-.5 1.2-.6l.7-2.1h2.2zM10 7a3 3 0 100 6 3 3 0 000-6z" />
+        </svg>
+      </button>
+
       {/* ─── Library Panel ───────────────────────────── */}
       <RomLibrary onPlayRom={handlePlayRom} />
 
@@ -196,6 +233,9 @@ export default function Home() {
         onLoad={saveStates.loadFromSlot}
         onDelete={saveStates.deleteSlot}
       />
-    </>
+
+      {/* ─── Settings Panel ──────────────────────────── */}
+      <SettingsPanel />
+    </div>
   );
 }

@@ -5,13 +5,14 @@ import styles from './GameBoyShell.module.css';
 
 interface ScreenBezelProps {
   isPoweredOn?: boolean;
+  scanlinesEnabled?: boolean;
   children?: ReactNode;
 }
 
-export function ScreenBezel({ isPoweredOn = false, children }: ScreenBezelProps) {
+export function ScreenBezel({ isPoweredOn = false, scanlinesEnabled = false, children }: ScreenBezelProps) {
   return (
     <div className={styles.bezel} data-powered={isPoweredOn}>
-      <div className={styles.screen}>
+      <div className={`${styles.screen} ${scanlinesEnabled ? styles.screenScanlines : ''}`}>
         {children ?? (
           <div className={styles.screenPlaceholder}>
             <span className={styles.screenLogo}>RetroPlay</span>

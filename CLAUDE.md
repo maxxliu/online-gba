@@ -106,8 +106,11 @@ Most directories are scaffolded. The following are **implemented**:
 - `saves/SaveStateCard.tsx` + `.module.css` — filled (screenshot/timestamp/playtime/Load/Delete) and empty (Save Here) variants
 - `saves/SaveStateManager.tsx` + `.module.css` — responsive panel (desktop slides right / mobile bottom sheet), 10-slot grid, Save Now, delete confirmation
 - `types/index.ts` — GbaButton, InputSource, EmulatorStatus, RomMetadata, StoredRom, SaveState, SaveStateMetadata, PlaytimeRecord, UploadStatus/Progress
+- `stores/settings-store.ts` — user settings (key bindings, shortcuts, volume, scanlines, background animation) with IndexedDB hydration
+- `settings/SettingsPanel.tsx` + `.module.css` — settings panel with toggles and key binding editor
+- `settings/KeyBindingEditor.tsx` + `.module.css` — interactive key rebinding UI
 
-**Still stubs:** `settings-store.ts`, `settings/`, `ui/`
+**Still stubs:** `ui/`
 ```
 public/
   mgba/                    # mgba.js + mgba.wasm copied from node_modules (NOT bundled by webpack)
@@ -171,3 +174,5 @@ cp node_modules/@thenick775/mgba-wasm/dist/mgba.{js,wasm} public/mgba/
 - To exclude a field during destructuring without triggering unused-var lint, explicitly pick needed fields instead of `{ data: _data, ...rest }` — ESLint rejects underscore prefixes.
 - Panel slide directions: Library slides from **left**, Saves slides from **right** — keep visually distinct. New panels should pick a consistent side.
 - Save state IDs use deterministic format `${romId}-slot-${slot}` — enables upsert and ID parsing with regex `^(.+)-slot-(\d+)$`.
+- CSS Module-scoped `::after` pseudo-elements cannot be toggled by global CSS classes — pass a boolean prop and conditionally apply a module class instead (e.g. `styles.screenScanlines`).
+- Desktop SpeedControl is absolutely positioned inside the shell scale wrapper at `top: 244px` (bezel bottom = 239px, D-pad top = 306px).
