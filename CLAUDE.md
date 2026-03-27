@@ -135,6 +135,9 @@ src/
     library-store.ts       # ROM library — upload, search, CRUD (implemented)
     settings-store.ts      # User settings — key bindings, volume, toggles (stub)
   types/                   # GbaButton, InputSource, RomMetadata, StoredRom, SaveState, UploadStatus/Progress types
+tests/
+  fixtures/                # Test ROM binaries + generator scripts
+  *.spec.ts                # Playwright e2e tests (config: playwright.config.ts at root)
 ```
 
 ## Commands
@@ -146,6 +149,8 @@ npm run lint         # ESLint
 npx tsc --noEmit     # Type check
 # After upgrading @thenick775/mgba-wasm:
 cp node_modules/@thenick775/mgba-wasm/dist/mgba.{js,wasm} public/mgba/
+npm run test:e2e     # Playwright e2e tests (Chromium, needs SharedArrayBuffer)
+npx tsx tests/fixtures/generate-test-rom.ts  # Regenerate test ROM fixture
 ```
 
 ## Future Roadmap (design for these NOW, build LATER)
@@ -176,3 +181,4 @@ cp node_modules/@thenick775/mgba-wasm/dist/mgba.{js,wasm} public/mgba/
 - Save state IDs use deterministic format `${romId}-slot-${slot}` — enables upsert and ID parsing with regex `^(.+)-slot-(\d+)$`.
 - CSS Module-scoped `::after` pseudo-elements cannot be toggled by global CSS classes — pass a boolean prop and conditionally apply a module class instead (e.g. `styles.screenScanlines`).
 - Desktop SpeedControl is absolutely positioned inside the shell scale wrapper at `top: 244px` (bezel bottom = 239px, D-pad top = 306px).
+- Canvas `getContext` is monkey-patched in `useEmulator.ts` to inject `preserveDrawingBuffer: true` for WebGL — DO NOT remove, `toDataURL()` returns black without it.

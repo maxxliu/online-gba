@@ -29,6 +29,8 @@ const SHORTCUT_LABELS: Record<keyof Shortcuts, string> = {
   speed3: 'Speed 3x',
   speed4: 'Speed 4x',
   speed5: 'Speed 5x',
+  speed10: 'Speed 10x',
+  speed20: 'Speed 20x',
   saveState: 'Quick Save',
   loadState: 'Quick Load',
 };

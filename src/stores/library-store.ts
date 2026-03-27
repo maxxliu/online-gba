@@ -17,6 +17,7 @@ interface LibraryState {
   loadRoms: () => Promise<void>;
   uploadRom: (file: File) => Promise<string | null>;
   deleteRom: (id: string) => Promise<void>;
+  renameRom: (id: string, newName: string) => Promise<void>;
   setSearchQuery: (query: string) => void;
   getFilteredRoms: () => RomMetadata[];
 }
@@ -127,6 +128,16 @@ export const useLibraryStore = create<LibraryState>()(
         // Optimistic removal
         set({ roms: get().roms.filter((r) => r.id !== id) });
         await storage.deleteRom(id);
+      },
+
+      renameRom: async (id: string, newName: string) => {
+        // Optimistic update
+        set({
+          roms: get().roms.map((r) =>
+            r.id === id ? { ...r, name: newName } : r,
+          ),
+        });
+        await storage.renameRom(id, newName);
       },
 
       setSearchQuery: (query: string) => set({ searchQuery: query }),

@@ -42,6 +42,19 @@ export function useEmulator({ desktopScreenRef, mobileScreenRef, isMobile }: Use
     canvas.style.imageRendering = 'pixelated';
     canvas.style.display = 'block';
     canvas.setAttribute('aria-label', 'Game screen');
+
+    // Monkey-patch getContext to inject preserveDrawingBuffer for WebGL screenshots.
+    // Without this, mGBA's WebGL2 context clears the buffer after compositing,
+    // causing canvas.toDataURL() to return a black image.
+    const originalGetContext = canvas.getContext.bind(canvas);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (canvas as any).getContext = function (type: string, attrs?: any) {
+      if (type === 'webgl2' || type === 'webgl') {
+        return originalGetContext(type, { ...attrs, preserveDrawingBuffer: true });
+      }
+      return originalGetContext(type, attrs);
+    };
+
     canvasRef.current = canvas;
   }, []);
 

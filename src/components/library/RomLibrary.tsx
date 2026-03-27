@@ -28,6 +28,7 @@ export function RomLibrary({ onPlayRom }: RomLibraryProps) {
   const searchQuery = useLibraryStore((s) => s.searchQuery);
   const loadRoms = useLibraryStore((s) => s.loadRoms);
   const deleteRom = useLibraryStore((s) => s.deleteRom);
+  const renameRom = useLibraryStore((s) => s.renameRom);
   const setSearchQuery = useLibraryStore((s) => s.setSearchQuery);
 
   const roms = useMemo(() => {
@@ -69,6 +70,13 @@ export function RomLibrary({ onPlayRom }: RomLibraryProps) {
   const handlePlay = useCallback((id: string) => {
     onPlayRom?.(id);
   }, [onPlayRom]);
+
+  const handleRename = useCallback(
+    (id: string, newName: string) => {
+      renameRom(id, newName);
+    },
+    [renameRom],
+  );
 
   const handleRequestDelete = useCallback(
     (id: string, name: string) => {
@@ -194,6 +202,7 @@ export function RomLibrary({ onPlayRom }: RomLibraryProps) {
                   rom={rom}
                   onPlay={handlePlay}
                   onDelete={handleRequestDelete}
+                  onRename={handleRename}
                 />
               ))}
             </AnimatePresence>

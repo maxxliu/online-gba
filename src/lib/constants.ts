@@ -14,7 +14,7 @@ export const DEFAULT_KEY_BINDINGS: Record<string, string> = {
 export const GBA_SCREEN_WIDTH = 240;
 export const GBA_SCREEN_HEIGHT = 160;
 
-export const SPEED_OPTIONS = [1, 2, 3, 4, 5] as const;
+export const SPEED_OPTIONS = [1, 2, 3, 4, 5, 10, 20] as const;
 
 export const BREAKPOINTS = {
   mobile: 768,
@@ -28,6 +28,8 @@ export const DEFAULT_SHORTCUTS: Record<string, string> = {
   speed3: '3',
   speed4: '4',
   speed5: '5',
+  speed10: '6',
+  speed20: '7',
   saveState: 'F5',
   loadState: 'F8',
 };

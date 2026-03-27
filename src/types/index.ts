@@ -92,6 +92,8 @@ export interface Shortcuts {
   speed3: string;
   speed4: string;
   speed5: string;
+  speed10: string;
+  speed20: string;
   saveState: string;
   loadState: string;
 }

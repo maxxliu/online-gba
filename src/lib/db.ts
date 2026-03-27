@@ -14,6 +14,7 @@ export interface StorageProvider {
   getRom(id: string): Promise<StoredRom | null>;
   listRoms(): Promise<RomMetadata[]>;
   deleteRom(id: string): Promise<void>;
+  renameRom(id: string, name: string): Promise<void>;
 
   // Save state operations (stubs for now)
   saveSaveState(
@@ -142,6 +143,18 @@ class IndexedDBProvider implements StorageProvider {
     // Cascade: delete playtime record
     await tx.objectStore('playtime').delete(id);
 
+    await tx.done;
+  }
+
+  async renameRom(id: string, name: string): Promise<void> {
+    const db = await this.getDB();
+    const tx = db.transaction('roms', 'readwrite');
+    const store = tx.objectStore('roms');
+    const rom = await store.get(id);
+    if (rom) {
+      rom.name = name;
+      await store.put(rom);
+    }
     await tx.done;
   }
 

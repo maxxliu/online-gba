@@ -58,12 +58,15 @@ export function useEmulatorShortcuts({
         return;
       }
 
-      // Speed keys 1-5
-      for (let i = 1; i <= 5; i++) {
-        const speedKey = `speed${i}` as keyof typeof activeShortcuts;
-        if (key === activeShortcuts[speedKey]) {
+      // Speed keys
+      const speedMap: [keyof Shortcuts, number][] = [
+        ['speed1', 1], ['speed2', 2], ['speed3', 3], ['speed4', 4], ['speed5', 5],
+        ['speed10', 10], ['speed20', 20],
+      ];
+      for (const [shortcutKey, speedValue] of speedMap) {
+        if (key === activeShortcuts[shortcutKey]) {
           e.preventDefault();
-          setSpeed(i);
+          setSpeed(speedValue);
           return;
         }
       }

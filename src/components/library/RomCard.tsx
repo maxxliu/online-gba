@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import type { RomMetadata } from '@/types';
 import { formatRelativeTime } from '@/lib/format';
@@ -15,9 +16,45 @@ interface RomCardProps {
   rom: RomMetadata;
   onPlay: (id: string) => void;
   onDelete: (id: string, name: string) => void;
+  onRename: (id: string, newName: string) => void;
 }
 
-export function RomCard({ rom, onPlay, onDelete }: RomCardProps) {
+export function RomCard({ rom, onPlay, onDelete, onRename }: RomCardProps) {
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState(rom.name);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [editing]);
+
+  const commitRename = useCallback(() => {
+    const trimmed = editValue.trim();
+    if (trimmed && trimmed !== rom.name) {
+      onRename(rom.id, trimmed);
+    } else {
+      setEditValue(rom.name);
+    }
+    setEditing(false);
+  }, [editValue, rom.name, rom.id, onRename]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        commitRename();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setEditValue(rom.name);
+        setEditing(false);
+      }
+    },
+    [commitRename, rom.name],
+  );
+
   return (
     <motion.div
       className={styles.card}
@@ -29,9 +66,53 @@ export function RomCard({ rom, onPlay, onDelete }: RomCardProps) {
       whileTap={{ scale: 0.98 }}
     >
       <div className={styles.info}>
-        <h3 className={styles.title} title={rom.name}>
-          {rom.name}
-        </h3>
+        {editing ? (
+          <input
+            ref={inputRef}
+            className={styles.titleInput}
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={commitRename}
+            onKeyDown={handleKeyDown}
+            aria-label="Rename ROM"
+          />
+        ) : (
+          <div className={styles.titleRow}>
+            <h3
+              className={styles.title}
+              title={rom.name}
+              onClick={() => {
+                setEditValue(rom.name);
+                setEditing(true);
+              }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setEditValue(rom.name);
+                  setEditing(true);
+                }
+              }}
+            >
+              {rom.name}
+            </h3>
+            <svg
+              className={styles.editIcon}
+              viewBox="0 0 16 16"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        )}
         <div className={styles.meta}>
           <span>{formatSize(rom.size)}</span>
           <span className={styles.dot}>·</span>
