@@ -95,6 +95,15 @@
   letter-spacing: 0.5px;
 }
 
+.cloudBadge {
+  width: 14px;
+  height: 14px;
+  color: var(--color-blue);
+  opacity: 0.7;
+  flex-shrink: 0;
+  margin-left: 2px;
+}
+
 .actions {
   display: flex;
   gap: 8px;

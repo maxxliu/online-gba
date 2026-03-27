@@ -109,6 +109,13 @@ Most directories are scaffolded. The following are **implemented**:
 - `stores/settings-store.ts` — user settings (key bindings, shortcuts, volume, scanlines, background animation) with IndexedDB hydration
 - `settings/SettingsPanel.tsx` + `.module.css` — settings panel with toggles and key binding editor
 - `settings/KeyBindingEditor.tsx` + `.module.css` — interactive key rebinding UI
+- `profile/AuthForm.tsx`, `ProfilePanel.tsx`, `SyncStatusIndicator.tsx` — auth UI and sync status display
+- `stores/auth-store.ts` — auth state (user, session, sync status) with Supabase auth + sync lifecycle
+- `lib/supabase.ts` — Supabase client singleton
+- `lib/sync-engine.ts` — `performInitialSync()` — bidirectional merge of ROMs, save states, playtime, settings on sign-in
+- `lib/sync-provider.ts` — `SyncProvider` implements `StorageProvider`, wraps `IndexedDBProvider` + enqueues sync ops on every write
+- `lib/sync-queue.ts` — `SyncQueue` — persistent FIFO queue in IndexedDB, FIFO drain with exponential backoff, online/offline awareness
+- `lib/image-utils.ts` — `compressScreenshot` (data URL → JPEG blob for upload), `blobToDataUrl` (blob → data URL for download)
 
 **Still stubs:** `ui/`
 ```
@@ -121,6 +128,7 @@ src/
     library/               # RomLibrary, RomCard, UploadRom
     saves/                 # SaveStateManager, SaveStateCard
     settings/              # SettingsPanel, KeyBindingEditor
+    profile/               # AuthForm, ProfilePanel, SyncStatusIndicator
     background/            # PixelBackground (animated canvas)
     ui/                    # Shared components
   hooks/                   # useButtonState, useKeyboardControls, useEmulator, useEmulatorShortcuts, useShellScale, useMediaQuery, usePlaytime, useSaveStates
@@ -129,11 +137,17 @@ src/
     constants.ts           # Default key mappings, colors, breakpoints, shortcuts
     format.ts              # Shared formatters (formatRelativeTime, formatPlaytime)
     emulator-bridge.ts     # mGBA button mapping, volume conversion, dynamic import
+    supabase.ts            # Supabase client singleton
+    sync-engine.ts         # performInitialSync — bidirectional cloud merge
+    sync-provider.ts       # SyncProvider — StorageProvider wrapper with cloud sync
+    sync-queue.ts          # SyncQueue — persistent FIFO with retry/backoff
+    image-utils.ts         # Screenshot compression (upload) and blob→dataUrl (download)
   stores/
     emulator-store.ts      # Emulator state (status, ROM, speed, volume, error)
     ui-store.ts            # UI state — activePanel, deleteConfirm (implemented)
     library-store.ts       # ROM library — upload, search, CRUD (implemented)
     settings-store.ts      # User settings — key bindings, volume, toggles (stub)
+    auth-store.ts          # Auth state, sync lifecycle, SyncProvider setup
   types/                   # GbaButton, InputSource, RomMetadata, StoredRom, SaveState, UploadStatus/Progress types
 tests/
   fixtures/                # Test ROM binaries + generator scripts
@@ -154,7 +168,7 @@ npx tsx tests/fixtures/generate-test-rom.ts  # Regenerate test ROM fixture
 ```
 
 ## Future Roadmap (design for these NOW, build LATER)
-- **Cloud Sync**: `StorageProvider` interface in `db.ts` ready for `CloudProvider` swap. ROM IDs must be content-hashed.
+- **Cloud Sync**: Implemented — `SyncProvider` + `SyncQueue` + `performInitialSync`. Uses Supabase (auth, database, storage). ROMs are content-hashed (SHA-256).
 - **Key Rebinding**: Defaults in `constants.ts`, active mappings from settings store. Touch layout eventually draggable.
 
 ## Pitfalls to Avoid
@@ -182,3 +196,7 @@ npx tsx tests/fixtures/generate-test-rom.ts  # Regenerate test ROM fixture
 - CSS Module-scoped `::after` pseudo-elements cannot be toggled by global CSS classes — pass a boolean prop and conditionally apply a module class instead (e.g. `styles.screenScanlines`).
 - Desktop SpeedControl is absolutely positioned inside the shell scale wrapper at `top: 244px` (bezel bottom = 239px, D-pad top = 306px).
 - Canvas `getContext` is monkey-patched in `useEmulator.ts` to inject `preserveDrawingBuffer: true` for WebGL — DO NOT remove, `toDataURL()` returns black without it.
+- Cloud sync: `usePlaytime` persists every 30s while playing, each triggering a sync op via `SyncProvider`. UI indicators for sync status should debounce the "syncing" state (~1s) to avoid constant flicker from these background updates.
+- Cloud sync: `SyncProvider` is swapped in as the active `StorageProvider` on sign-in (`setStorageProvider()` in `auth-store.ts`). All storage calls automatically enqueue cloud sync ops — no manual sync triggers needed.
+- Cloud sync: Save states synced from cloud are stored locally with `cloudOnly: true` and empty `ArrayBuffer(0)` — binary is lazy-downloaded on first load via `SyncProvider.loadSaveState()`.
+- Cloud sync: Supabase Storage paths follow `{userId}/{romId}` for ROMs, `{userId}/{romId}/slot-{n}.ss` for save binaries, `{userId}/{romId}/slot-{n}.jpg` for screenshots.

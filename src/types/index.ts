@@ -21,6 +21,7 @@ export interface RomMetadata {
   size: number;
   addedAt: number;
   lastPlayedAt?: number;
+  cloudOnly?: boolean;
 }
 
 export interface StoredRom extends RomMetadata {
@@ -48,6 +49,7 @@ export interface SaveStateMetadata {
   createdAt: number;
   playtime: number;
   screenshotDataUrl?: string;
+  cloudOnly?: boolean;
 }
 
 // ─── Playtime ───────────────────────────────────
@@ -120,4 +122,26 @@ export interface UploadProgress {
   status: UploadStatus;
   filename?: string;
   error?: string;
+}
+
+// ─── Cloud Sync ─────────────────────────────────
+
+export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error' | 'offline';
+
+export type SyncOperationType =
+  | 'upload-rom'
+  | 'delete-rom'
+  | 'update-rom-metadata'
+  | 'upload-save-state'
+  | 'delete-save-state'
+  | 'update-settings'
+  | 'update-playtime';
+
+export interface SyncOperation {
+  type: SyncOperationType;
+  dedupKey: string;
+  romId?: string;
+  slot?: number;
+  timestamp: number;
+  retries?: number;
 }

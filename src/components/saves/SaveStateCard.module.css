@@ -108,6 +108,23 @@
   opacity: 0.85;
 }
 
+.overwriteBtn {
+  padding: 6px 10px;
+  border: 1px solid var(--color-panel-border);
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.overwriteBtn:hover {
+  color: var(--color-teal);
+  border-color: var(--color-teal);
+}
+
 .deleteBtn {
   padding: 6px 10px;
   border: 1px solid var(--color-panel-border);

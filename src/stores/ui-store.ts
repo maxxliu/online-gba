@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-export type PanelType = 'library' | 'saves' | 'settings';
+export type PanelType = 'library' | 'saves' | 'settings' | 'profile';
 
 interface DeleteConfirm {
   romId: string;

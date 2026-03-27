@@ -1,0 +1,81 @@
+.indicator {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--color-panel-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--color-panel-border);
+}
+
+.cloudIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.statusIcon {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  bottom: 2px;
+  right: 2px;
+}
+
+/* ─── Status Colors ────────────────────────────── */
+
+.synced {
+  color: var(--color-teal);
+  opacity: 0.7;
+}
+
+.syncing {
+  color: var(--color-teal);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.error {
+  color: var(--color-red);
+}
+
+.offline {
+  color: var(--color-orange);
+}
+
+/* ─── Animations ───────────────────────────────── */
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.syncingAnim {
+  animation: rotate 1.2s linear infinite;
+}
+
+@keyframes rotate {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Large variant (for panel) ────────────────── */
+
+.indicatorLarge {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+}
+
+.indicatorLarge .cloudIcon {
+  width: 28px;
+  height: 28px;
+}
+
+.indicatorLarge .statusIcon {
+  width: 14px;
+  height: 14px;
+  bottom: 4px;
+  right: 4px;
+}

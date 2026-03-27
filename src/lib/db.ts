@@ -4,6 +4,7 @@ import type {
   StoredRom,
   SaveStateMetadata,
   PlaytimeRecord,
+  SyncOperation,
 } from '@/types';
 
 // ─── Storage Interface ──────────────────────────
@@ -47,7 +48,7 @@ export async function hashRomData(data: ArrayBuffer): Promise<string> {
 // ─── IndexedDB Implementation ───────────────────
 
 const DB_NAME = 'retroplay';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 interface RetroPlayDB {
   roms: {
@@ -67,9 +68,13 @@ interface RetroPlayDB {
     key: string;
     value: PlaytimeRecord;
   };
+  syncQueue: {
+    key: string;
+    value: SyncOperation;
+  };
 }
 
-class IndexedDBProvider implements StorageProvider {
+export class IndexedDBProvider implements StorageProvider {
   private dbPromise: Promise<IDBPDatabase<RetroPlayDB>> | null = null;
 
   private getDB(): Promise<IDBPDatabase<RetroPlayDB>> {
@@ -90,6 +95,9 @@ class IndexedDBProvider implements StorageProvider {
           }
           if (!db.objectStoreNames.contains('playtime')) {
             db.createObjectStore('playtime', { keyPath: 'romId' });
+          }
+          if (!db.objectStoreNames.contains('syncQueue')) {
+            db.createObjectStore('syncQueue', { keyPath: 'dedupKey' });
           }
         },
       });
@@ -117,8 +125,8 @@ class IndexedDBProvider implements StorageProvider {
 
     let cursor = await store.openCursor();
     while (cursor) {
-      const { id, name, filename, size, addedAt, lastPlayedAt } = cursor.value;
-      roms.push({ id, name, filename, size, addedAt, lastPlayedAt });
+      const { id, name, filename, size, addedAt, lastPlayedAt, cloudOnly } = cursor.value;
+      roms.push({ id, name, filename, size, addedAt, lastPlayedAt, ...(cloudOnly ? { cloudOnly } : {}) });
       cursor = await cursor.continue();
     }
 
@@ -178,9 +186,9 @@ class IndexedDBProvider implements StorageProvider {
     const records = await db.getAllFromIndex('saveStates', 'by-romId', romId);
     return records
       .map((record) => {
-        const { romId, slot, createdAt, playtime, screenshotDataUrl } = record;
+        const { romId, slot, createdAt, playtime, screenshotDataUrl, cloudOnly } = record;
         const id = record.id ?? `${romId}-slot-${slot}`;
-        return { id, romId, slot, createdAt, playtime, screenshotDataUrl };
+        return { id, romId, slot, createdAt, playtime, screenshotDataUrl, ...(cloudOnly ? { cloudOnly } : {}) };
       })
       .sort((a, b) => b.createdAt - a.createdAt);
   }
@@ -215,6 +223,44 @@ class IndexedDBProvider implements StorageProvider {
     const db = await this.getDB();
     await db.put('playtime', record);
   }
+
+  // ── Sync Queue ──────────────────────────────────
+
+  async saveSyncOp(op: SyncOperation): Promise<void> {
+    const db = await this.getDB();
+    await db.put('syncQueue', op);
+  }
+
+  async deleteSyncOp(dedupKey: string): Promise<void> {
+    const db = await this.getDB();
+    await db.delete('syncQueue', dedupKey);
+  }
+
+  async listSyncOps(): Promise<SyncOperation[]> {
+    const db = await this.getDB();
+    return db.getAll('syncQueue');
+  }
 }
 
-export const storage: StorageProvider = new IndexedDBProvider();
+// ─── Proxy-based Mutable Storage ──────────────────
+
+const indexedDb = new IndexedDBProvider();
+let activeProvider: StorageProvider = indexedDb;
+
+export const storage: StorageProvider = new Proxy({} as StorageProvider, {
+  get(_target, prop) {
+    const value = (activeProvider as unknown as Record<string, unknown>)[prop as string];
+    if (typeof value === 'function') {
+      return (value as (...args: unknown[]) => unknown).bind(activeProvider);
+    }
+    return value;
+  },
+});
+
+export function setStorageProvider(provider: StorageProvider): void {
+  activeProvider = provider;
+}
+
+export function getIndexedDb(): IndexedDBProvider {
+  return indexedDb;
+}

@@ -10,6 +10,8 @@ import { SpeedControl } from '@/components/emulator/SpeedControl';
 import { RomLibrary } from '@/components/library/RomLibrary';
 import { SaveStateManager } from '@/components/saves/SaveStateManager';
 import { SettingsPanel } from '@/components/settings/SettingsPanel';
+import { ProfilePanel } from '@/components/profile/ProfilePanel';
+import { SyncStatusIndicator } from '@/components/profile/SyncStatusIndicator';
 import { useButtonState } from '@/hooks/useButtonState';
 import { useKeyboardControls } from '@/hooks/useKeyboardControls';
 import { useEmulator } from '@/hooks/useEmulator';
@@ -21,6 +23,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useUiStore } from '@/stores/ui-store';
 import { useEmulatorStore } from '@/stores/emulator-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { useAuthStore } from '@/stores/auth-store';
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,6 +51,11 @@ export default function Home() {
   // Hydrate settings from IndexedDB on mount
   useEffect(() => {
     useSettingsStore.getState().hydrate();
+  }, []);
+
+  // Initialize auth (Supabase session restore + sync)
+  useEffect(() => {
+    useAuthStore.getState().initialize();
   }, []);
 
   const emulator = useEmulator({ desktopScreenRef, mobileScreenRef, isMobile });
@@ -157,6 +165,7 @@ export default function Home() {
             onLibraryPress={() => togglePanel('library')}
             onSavesPress={() => togglePanel('saves')}
             onSettingsPress={() => togglePanel('settings')}
+            onProfilePress={() => togglePanel('profile')}
           />
         </>
       )}
@@ -222,6 +231,24 @@ export default function Home() {
         </svg>
       </button>
 
+      {/* ─── Desktop Profile FAB ──────────────────────── */}
+      <button
+        className="profile-fab"
+        onClick={() => togglePanel('profile')}
+        aria-label="Profile"
+        type="button"
+        style={isMobile ? { display: 'none' } : undefined}
+      >
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0H3z" />
+        </svg>
+      </button>
+
+      {/* ─── Desktop Sync Indicator ──────────────────── */}
+      <div className="sync-indicator" style={isMobile ? { display: 'none' } : undefined}>
+        <SyncStatusIndicator />
+      </div>
+
       {/* ─── Library Panel ───────────────────────────── */}
       <RomLibrary onPlayRom={handlePlayRom} />
 
@@ -236,6 +263,9 @@ export default function Home() {
 
       {/* ─── Settings Panel ──────────────────────────── */}
       <SettingsPanel />
+
+      {/* ─── Profile Panel ──────────────────────────── */}
+      <ProfilePanel />
     </div>
   );
 }

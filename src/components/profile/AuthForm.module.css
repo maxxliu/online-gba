@@ -1,0 +1,176 @@
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ─── Tabs ─────────────────────────────────────── */
+
+.tabs {
+  display: flex;
+  background: var(--color-bg-dark);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.tabActive {
+  background: var(--color-bg-light);
+  color: var(--color-text);
+}
+
+/* ─── Form ─────────────────────────────────────── */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input {
+  padding: 10px 12px;
+  background: var(--color-bg-dark);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  border-color: var(--color-teal);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.submitBtn {
+  padding: 10px;
+  background: var(--color-teal);
+  color: var(--color-bg-darkest);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.submitBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ─── Spinner ──────────────────────────────────── */
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-bg-darkest);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Messages ─────────────────────────────────── */
+
+.error {
+  font-size: 12px;
+  color: var(--color-red);
+  margin: 0;
+  padding: 8px 10px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 6px;
+}
+
+.success {
+  font-size: 12px;
+  color: var(--color-teal);
+  margin: 0;
+  padding: 8px 10px;
+  background: rgba(0, 212, 170, 0.1);
+  border-radius: 6px;
+}
+
+/* ─── Divider ──────────────────────────────────── */
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Google Button ────────────────────────────── */
+
+.googleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--color-bg-dark);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+  font-family: inherit;
+}
+
+.googleBtn:hover:not(:disabled) {
+  background: var(--color-card-hover);
+  border-color: var(--color-text-muted);
+}
+
+.googleBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.googleIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}

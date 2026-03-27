@@ -23,7 +23,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 8px 24px;
+  padding: 8px 12px;
   color: var(--color-text-secondary);
   font-family: var(--font-pixel), monospace;
   font-size: 10px;

@@ -121,6 +121,11 @@ export function RomCard({ rom, onPlay, onDelete, onRename }: RomCardProps) {
           ) : (
             <span className={styles.badge}>New</span>
           )}
+          {rom.cloudOnly && (
+            <svg className={styles.cloudBadge} viewBox="0 0 16 16" fill="currentColor" aria-label="Cloud only" role="img">
+              <path d="M13.5 7.02C13.12 4.73 11.18 3 8.8 3c-1.76 0-3.3 1-4.06 2.43C2.68 5.63 1 7.38 1 9.5 1 12 3 14 5.5 14h7.8c1.6 0 2.7-1.3 2.7-2.9 0-1.5-1.1-2.7-2.5-2.88v-1.2zM10 10l-2 2-2-2h1.5V7.5h1V10H10z" />
+            </svg>
+          )}
         </div>
       </div>
 

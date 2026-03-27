@@ -78,6 +78,16 @@ export function SaveStateCard({ state, slot, onSave, onLoad, onDelete }: SaveSta
             Load
           </button>
         )}
+        {onSave && !isAuto && (
+          <button
+            className={styles.overwriteBtn}
+            onClick={() => onSave(slot)}
+            aria-label={`Overwrite slot ${slot}`}
+            type="button"
+          >
+            Overwrite
+          </button>
+        )}
         {onDelete && (
           <button
             className={styles.deleteBtn}
