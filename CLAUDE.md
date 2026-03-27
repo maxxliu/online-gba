@@ -105,7 +105,7 @@ Most directories are scaffolded. The following are **implemented**:
 - `emulator/SpeedControl.tsx` + `.module.css` — horizontal pill bar (1x-5x) with Framer Motion animated indicator
 - `saves/SaveStateCard.tsx` + `.module.css` — filled (screenshot/timestamp/playtime/Load/Delete) and empty (Save Here) variants
 - `saves/SaveStateManager.tsx` + `.module.css` — responsive panel (desktop slides right / mobile bottom sheet), 10-slot grid, Save Now, delete confirmation
-- `types/index.ts` — GbaButton, InputSource, EmulatorStatus, RomMetadata, StoredRom, SaveState, SaveStateMetadata, PlaytimeRecord, UploadStatus/Progress
+- `types/index.ts` — GbaButton, InputSource, EmulatorStatus, RomMetadata, StoredRom, SaveState, SaveStateMetadata, PlaytimeRecord, KeyBindings, Shortcuts, UserSettings, SyncStatus, SyncOperation, UploadStatus/Progress
 - `stores/settings-store.ts` — user settings (key bindings, shortcuts, volume, scanlines, background animation) with IndexedDB hydration
 - `settings/SettingsPanel.tsx` + `.module.css` — settings panel with toggles and key binding editor
 - `settings/KeyBindingEditor.tsx` + `.module.css` — interactive key rebinding UI
@@ -146,7 +146,7 @@ src/
     emulator-store.ts      # Emulator state (status, ROM, speed, volume, error)
     ui-store.ts            # UI state — activePanel, deleteConfirm (implemented)
     library-store.ts       # ROM library — upload, search, CRUD (implemented)
-    settings-store.ts      # User settings — key bindings, volume, toggles (stub)
+    settings-store.ts      # User settings — key bindings, volume, scanlines, background animation (IndexedDB hydration)
     auth-store.ts          # Auth state, sync lifecycle, SyncProvider setup
   types/                   # GbaButton, InputSource, RomMetadata, StoredRom, SaveState, UploadStatus/Progress types
 tests/
@@ -167,9 +167,8 @@ npm run test:e2e     # Playwright e2e tests (Chromium, needs SharedArrayBuffer)
 npx tsx tests/fixtures/generate-test-rom.ts  # Regenerate test ROM fixture
 ```
 
-## Future Roadmap (design for these NOW, build LATER)
-- **Cloud Sync**: Implemented — `SyncProvider` + `SyncQueue` + `performInitialSync`. Uses Supabase (auth, database, storage). ROMs are content-hashed (SHA-256).
-- **Key Rebinding**: Defaults in `constants.ts`, active mappings from settings store. Touch layout eventually draggable.
+## Roadmap
+- **Touch Layout Customization**: Draggable touch control positioning (not yet implemented).
 
 ## Pitfalls to Avoid
 - Do NOT use `gbajs`/`gbajs2` — use `@thenick775/mgba-wasm` only
