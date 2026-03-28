@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
-import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls, type PanInfo } from 'framer-motion';
 import { useUiStore } from '@/stores/ui-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -15,6 +15,7 @@ export function SettingsPanel() {
   const isOpen = useUiStore((s) => s.activePanel === 'settings');
   const closePanel = useUiStore((s) => s.closePanel);
   const { isMobile } = useMediaQuery();
+  const dragControls = useDragControls();
 
   const volume = useSettingsStore((s) => s.volume);
   const scanlinesEnabled = useSettingsStore((s) => s.scanlinesEnabled);
@@ -45,7 +46,7 @@ export function SettingsPanel() {
   const panelContent = (
     <>
       {/* Header */}
-      <div className={styles.header}>
+      <div className={styles.header} onPointerDown={(e) => { if (isMobile) dragControls.start(e); }}>
         {isMobile && <div className={styles.dragHandle} />}
         <div className={styles.headerRow}>
           <h2 className={styles.title}>Settings</h2>
@@ -147,6 +148,8 @@ export function SettingsPanel() {
               drag="y"
               dragConstraints={{ top: 0 }}
               dragElastic={0.1}
+              dragControls={dragControls}
+              dragListener={false}
               onDragEnd={handleDragEnd}
               role="dialog"
               aria-label="Settings"

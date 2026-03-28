@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls, type PanInfo } from 'framer-motion';
 import { useUiStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useLibraryStore } from '@/stores/library-store';
@@ -17,6 +17,7 @@ export function ProfilePanel() {
   const isOpen = useUiStore((s) => s.activePanel === 'profile');
   const closePanel = useUiStore((s) => s.closePanel);
   const { isMobile } = useMediaQuery();
+  const dragControls = useDragControls();
 
   const user = useAuthStore((s) => s.user);
   const syncStatus = useAuthStore((s) => s.syncStatus);
@@ -85,7 +86,7 @@ export function ProfilePanel() {
   const panelContent = (
     <>
       {/* Header */}
-      <div className={styles.header}>
+      <div className={styles.header} onPointerDown={(e) => { if (isMobile) dragControls.start(e); }}>
         {isMobile && <div className={styles.dragHandle} />}
         <div className={styles.headerRow}>
           <h2 className={styles.title}>Account</h2>
@@ -188,6 +189,8 @@ export function ProfilePanel() {
               drag="y"
               dragConstraints={{ top: 0 }}
               dragElastic={0.1}
+              dragControls={dragControls}
+              dragListener={false}
               onDragEnd={handleDragEnd}
               role="dialog"
               aria-label="Profile"

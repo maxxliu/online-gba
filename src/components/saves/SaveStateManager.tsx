@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls, type PanInfo } from 'framer-motion';
 import { useUiStore } from '@/stores/ui-store';
 import { useEmulatorStore } from '@/stores/emulator-store';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -27,6 +27,7 @@ export function SaveStateManager({ states, loading, onSave, onLoad, onDelete }: 
   const currentRomName = useEmulatorStore((s) => s.currentRomName);
   const isPlaying = useEmulatorStore((s) => s.status === 'running' || s.status === 'paused');
   const { isMobile } = useMediaQuery();
+  const dragControls = useDragControls();
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -75,7 +76,7 @@ export function SaveStateManager({ states, loading, onSave, onLoad, onDelete }: 
   const panelContent = (
     <>
       {/* Header */}
-      <div className={styles.header}>
+      <div className={styles.header} onPointerDown={(e) => { if (isMobile) dragControls.start(e); }}>
         {isMobile && <div className={styles.dragHandle} />}
         <div className={styles.headerRow}>
           <div>
@@ -215,6 +216,8 @@ export function SaveStateManager({ states, loading, onSave, onLoad, onDelete }: 
               drag="y"
               dragConstraints={{ top: 0 }}
               dragElastic={0.1}
+              dragControls={dragControls}
+              dragListener={false}
               onDragEnd={handleDragEnd}
               role="dialog"
               aria-label="Save States"

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls, type PanInfo } from 'framer-motion';
 import { useUiStore } from '@/stores/ui-store';
 import { useLibraryStore } from '@/stores/library-store';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -42,6 +42,7 @@ export function RomLibrary({ onPlayRom }: RomLibraryProps) {
   }, [allRoms, searchQuery]);
 
   const { isMobile } = useMediaQuery();
+  const dragControls = useDragControls();
   const searchRef = useRef<HTMLInputElement>(null);
 
   // Load ROMs on first open
@@ -104,7 +105,7 @@ export function RomLibrary({ onPlayRom }: RomLibraryProps) {
   const panelContent = (
     <>
       {/* Header */}
-      <div className={styles.header}>
+      <div className={styles.header} onPointerDown={(e) => { if (isMobile) dragControls.start(e); }}>
         {isMobile && <div className={styles.dragHandle} />}
         <div className={styles.headerRow}>
           <h2 className={styles.title}>Library</h2>
@@ -126,88 +127,90 @@ export function RomLibrary({ onPlayRom }: RomLibraryProps) {
         </div>
       </div>
 
-      {/* Search */}
-      <div className={styles.search}>
-        <svg
-          className={styles.searchIcon}
-          viewBox="0 0 20 20"
-          fill="none"
-          aria-hidden="true"
-        >
-          <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M13.5 13.5L17 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-        <input
-          ref={searchRef}
-          className={styles.searchInput}
-          type="text"
-          placeholder="Search ROMs..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          aria-label="Search ROMs"
-        />
-      </div>
+      <div className={styles.content}>
+        {/* Search */}
+        <div className={styles.search}>
+          <svg
+            className={styles.searchIcon}
+            viewBox="0 0 20 20"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M13.5 13.5L17 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <input
+            ref={searchRef}
+            className={styles.searchInput}
+            type="text"
+            placeholder="Search ROMs..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search ROMs"
+          />
+        </div>
 
-      {/* Upload Zone */}
-      <div className={styles.section}>
-        <UploadRom />
-      </div>
+        {/* Upload Zone */}
+        <div className={styles.section}>
+          <UploadRom />
+        </div>
 
-      {/* ROM Grid */}
-      <div className={styles.section}>
-        {loaded && roms.length === 0 && !searchQuery && (
-          <div className={styles.empty}>
-            <svg
-              className={styles.emptyIcon}
-              viewBox="0 0 48 48"
-              fill="none"
-              aria-hidden="true"
-            >
-              <rect
-                x="6"
-                y="12"
-                width="36"
-                height="24"
-                rx="4"
-                stroke="currentColor"
-                strokeWidth="2"
-              />
-              <rect x="18" y="16" width="12" height="8" rx="1" fill="currentColor" opacity="0.2" />
-              <circle cx="32" cy="28" r="3" fill="currentColor" opacity="0.2" />
-            </svg>
-            <p className={styles.emptyTitle}>No ROMs yet</p>
-            <p className={styles.emptyHint}>
-              Drop a .gba file above to get started.
-              <br />
-              Your ROMs never leave this device.
-            </p>
-          </div>
-        )}
-
-        {loaded && roms.length === 0 && searchQuery && (
-          <div className={styles.empty}>
-            <p className={styles.emptyTitle}>No matches</p>
-            <p className={styles.emptyHint}>
-              No ROMs match &ldquo;{searchQuery}&rdquo;
-            </p>
-          </div>
-        )}
-
-        {roms.length > 0 && (
-          <div className={styles.grid}>
-            <AnimatePresence mode="popLayout">
-              {roms.map((rom) => (
-                <RomCard
-                  key={rom.id}
-                  rom={rom}
-                  onPlay={handlePlay}
-                  onDelete={handleRequestDelete}
-                  onRename={handleRename}
+        {/* ROM Grid */}
+        <div className={styles.section}>
+          {loaded && roms.length === 0 && !searchQuery && (
+            <div className={styles.empty}>
+              <svg
+                className={styles.emptyIcon}
+                viewBox="0 0 48 48"
+                fill="none"
+                aria-hidden="true"
+              >
+                <rect
+                  x="6"
+                  y="12"
+                  width="36"
+                  height="24"
+                  rx="4"
+                  stroke="currentColor"
+                  strokeWidth="2"
                 />
-              ))}
-            </AnimatePresence>
-          </div>
-        )}
+                <rect x="18" y="16" width="12" height="8" rx="1" fill="currentColor" opacity="0.2" />
+                <circle cx="32" cy="28" r="3" fill="currentColor" opacity="0.2" />
+              </svg>
+              <p className={styles.emptyTitle}>No ROMs yet</p>
+              <p className={styles.emptyHint}>
+                Drop a .gba file above to get started.
+                <br />
+                Your ROMs never leave this device.
+              </p>
+            </div>
+          )}
+
+          {loaded && roms.length === 0 && searchQuery && (
+            <div className={styles.empty}>
+              <p className={styles.emptyTitle}>No matches</p>
+              <p className={styles.emptyHint}>
+                No ROMs match &ldquo;{searchQuery}&rdquo;
+              </p>
+            </div>
+          )}
+
+          {roms.length > 0 && (
+            <div className={styles.grid}>
+              <AnimatePresence mode="popLayout">
+                {roms.map((rom) => (
+                  <RomCard
+                    key={rom.id}
+                    rom={rom}
+                    onPlay={handlePlay}
+                    onDelete={handleRequestDelete}
+                    onRename={handleRename}
+                  />
+                ))}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Delete Confirmation */}
@@ -279,6 +282,8 @@ export function RomLibrary({ onPlayRom }: RomLibraryProps) {
               drag="y"
               dragConstraints={{ top: 0 }}
               dragElastic={0.1}
+              dragControls={dragControls}
+              dragListener={false}
               onDragEnd={handleDragEnd}
               role="dialog"
               aria-label="ROM Library"
