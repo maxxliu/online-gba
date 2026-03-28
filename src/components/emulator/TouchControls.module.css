@@ -213,6 +213,7 @@
   touch-action: none;
   z-index: 4;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
 }
 
 /* ─── Action Buttons (A/B) ──────────────────────── */

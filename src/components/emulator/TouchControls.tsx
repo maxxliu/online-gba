@@ -63,6 +63,7 @@ export function TouchControls({
   // Track which D-pad directions are currently pressed by the touch surface
   const activeDpadDirs = useRef<Set<DpadDir>>(new Set());
   const dpadRef = useRef<HTMLDivElement>(null);
+  const dpadPointerDown = useRef(false);
 
   // Compute visual direction attribute for the 3D tilt effect
   const activeDirections = DPAD_DIRECTIONS.filter((d) => pressedButtons[d]);
@@ -118,7 +119,11 @@ export function TouchControls({
   const handleDpadDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       e.preventDefault();
-      (e.target as HTMLDivElement).setPointerCapture(e.pointerId);
+      dpadPointerDown.current = true;
+      // Touch devices get implicit pointer capture; only capture explicitly for mouse/pen
+      if (e.pointerType !== 'touch') {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }
       if (canVibrate && hapticEnabled) {
         navigator.vibrate(8);
       }
@@ -129,7 +134,8 @@ export function TouchControls({
 
   const handleDpadMove = useCallback(
     (e: React.PointerEvent) => {
-      if (e.pressure > 0) {
+      // Use ref instead of e.pressure — iOS reports pressure: 0 on devices without 3D Touch
+      if (dpadPointerDown.current) {
         updateDpadFromPointer(e);
       }
     },
@@ -139,6 +145,7 @@ export function TouchControls({
   const handleDpadUp = useCallback(
     (e: React.PointerEvent) => {
       e.preventDefault();
+      dpadPointerDown.current = false;
       const prev = activeDpadDirs.current;
       Array.from(prev).forEach((d) => {
         onButtonRelease(d);
