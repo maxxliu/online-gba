@@ -58,7 +58,7 @@ export default function Home() {
     useAuthStore.getState().initialize();
   }, []);
 
-  const emulator = useEmulator({ desktopScreenRef, mobileScreenRef, isMobile });
+  const emulator = useEmulator({ desktopScreenRef, mobileScreenRef, isMobile, isLandscape });
   const { getCurrentPlaytime } = usePlaytime();
   const saveStates = useSaveStates({
     saveStateToVfs: emulator.saveStateToVfs,
@@ -123,27 +123,26 @@ export default function Home() {
     <div className={scanlinesClass}>
       <PixelBackground animationEnabled={backgroundAnimationEnabled} />
 
-      {/* ─── Mobile Landscape ──────────────────────────── */}
-      {isMobile && isLandscape && (
-        <div className="mobile-landscape-container">
-          <div className="mobile-screen mobile-screen--landscape">
-            <div className="mobile-screen-inner" ref={isLandscape ? mobileScreenRef : undefined}>
-              {!isPlaying && <ScreenPlaceholder variant="mobile" error={emulatorError} />}
-            </div>
-          </div>
-          <TouchControls
-            layout="landscape"
-            onButtonPress={handlePointerPress}
-            onButtonRelease={handlePointerRelease}
-            pressedButtons={pressedButtons}
-          />
-        </div>
-      )}
-
-      {/* ─── Mobile Portrait ───────────────────────────── */}
-      {isMobile && !isLandscape && (
+      {/* ─── Mobile ─────────────────────────────────────── */}
+      {isMobile && (
         <>
-          <div className="mobile-portrait-container">
+          {/* Landscape — always in DOM, hidden when portrait */}
+          <div className="mobile-landscape-container" style={!isLandscape ? { display: 'none' } : undefined}>
+            <div className="mobile-screen mobile-screen--landscape">
+              <div className="mobile-screen-inner" ref={isLandscape ? mobileScreenRef : undefined}>
+                {!isPlaying && <ScreenPlaceholder variant="mobile" error={emulatorError} />}
+              </div>
+            </div>
+            <TouchControls
+              layout="landscape"
+              onButtonPress={handlePointerPress}
+              onButtonRelease={handlePointerRelease}
+              pressedButtons={pressedButtons}
+            />
+          </div>
+
+          {/* Portrait — always in DOM, hidden when landscape */}
+          <div className="mobile-portrait-container" style={isLandscape ? { display: 'none' } : undefined}>
             <div className="mobile-screen mobile-screen--portrait">
               <div className="mobile-screen-inner" ref={!isLandscape ? mobileScreenRef : undefined}>
                 {!isPlaying && <ScreenPlaceholder variant="mobile" error={emulatorError} />}
@@ -161,12 +160,16 @@ export default function Home() {
               pressedButtons={pressedButtons}
             />
           </div>
-          <MobileToolbar
-            onLibraryPress={() => togglePanel('library')}
-            onSavesPress={() => togglePanel('saves')}
-            onSettingsPress={() => togglePanel('settings')}
-            onProfilePress={() => togglePanel('profile')}
-          />
+
+          {/* MobileToolbar — portrait only (no refs, safe to conditionally render) */}
+          {!isLandscape && (
+            <MobileToolbar
+              onLibraryPress={() => togglePanel('library')}
+              onSavesPress={() => togglePanel('saves')}
+              onSettingsPress={() => togglePanel('settings')}
+              onProfilePress={() => togglePanel('profile')}
+            />
+          )}
         </>
       )}
 

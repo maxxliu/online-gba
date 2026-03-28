@@ -14,9 +14,10 @@ interface UseEmulatorOptions {
   desktopScreenRef: React.RefObject<HTMLDivElement | null>;
   mobileScreenRef: React.RefObject<HTMLDivElement | null>;
   isMobile: boolean;
+  isLandscape: boolean;
 }
 
-export function useEmulator({ desktopScreenRef, mobileScreenRef, isMobile }: UseEmulatorOptions) {
+export function useEmulator({ desktopScreenRef, mobileScreenRef, isMobile, isLandscape }: UseEmulatorOptions) {
   const moduleRef = useRef<MgbaModule | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const initPromiseRef = useRef<Promise<void> | null>(null);
@@ -67,7 +68,7 @@ export function useEmulator({ desktopScreenRef, mobileScreenRef, isMobile }: Use
     if (target && canvas.parentElement !== target) {
       target.appendChild(canvas);
     }
-  }, [isMobile, desktopScreenRef, mobileScreenRef]);
+  }, [isMobile, isLandscape, desktopScreenRef, mobileScreenRef]);
 
   // Initialize mGBA module
   useEffect(() => {
