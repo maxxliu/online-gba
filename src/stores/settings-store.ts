@@ -15,6 +15,8 @@ interface SettingsState {
   volume: number;
   scanlinesEnabled: boolean;
   backgroundAnimationEnabled: boolean;
+  hapticEnabled: boolean;
+  controlOpacity: number;
   hydrated: boolean;
 
   setKeyBinding: (button: keyof KeyBindings, key: string) => void;
@@ -22,6 +24,8 @@ interface SettingsState {
   setVolume: (v: number) => void;
   toggleScanlines: () => void;
   toggleBackgroundAnimation: () => void;
+  toggleHaptic: () => void;
+  setControlOpacity: (v: number) => void;
   resetAllBindings: () => void;
   hydrate: () => Promise<void>;
 }
@@ -33,6 +37,8 @@ function persistSettings(state: SettingsState) {
     volume: state.volume,
     scanlinesEnabled: state.scanlinesEnabled,
     backgroundAnimationEnabled: state.backgroundAnimationEnabled,
+    hapticEnabled: state.hapticEnabled,
+    controlOpacity: state.controlOpacity,
   };
   storage.setSetting('userSettings', settings).catch(() => {
     // Silently fail — settings will reload from defaults next session
@@ -47,6 +53,8 @@ export const useSettingsStore = create<SettingsState>()(
       volume: 100,
       scanlinesEnabled: false,
       backgroundAnimationEnabled: true,
+      hapticEnabled: true,
+      controlOpacity: 0.75,
       hydrated: false,
 
       setKeyBinding: (button, key) => {
@@ -79,6 +87,17 @@ export const useSettingsStore = create<SettingsState>()(
         persistSettings(get());
       },
 
+      toggleHaptic: () => {
+        set((s) => ({ hapticEnabled: !s.hapticEnabled }));
+        persistSettings(get());
+      },
+
+      setControlOpacity: (v) => {
+        const clamped = Math.max(0.3, Math.min(1, v));
+        set({ controlOpacity: clamped });
+        persistSettings(get());
+      },
+
       resetAllBindings: () => {
         set({
           keyBindings: { ...defaultKeyBindings },
@@ -97,6 +116,8 @@ export const useSettingsStore = create<SettingsState>()(
               volume: saved.volume ?? 100,
               scanlinesEnabled: saved.scanlinesEnabled ?? false,
               backgroundAnimationEnabled: saved.backgroundAnimationEnabled ?? true,
+              hapticEnabled: saved.hapticEnabled ?? true,
+              controlOpacity: saved.controlOpacity ?? 0.75,
               hydrated: true,
             });
           } else {

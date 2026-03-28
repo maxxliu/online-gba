@@ -20,6 +20,7 @@ import { usePlaytime } from '@/hooks/usePlaytime';
 import { useSaveStates } from '@/hooks/useSaveStates';
 import { useShellScale } from '@/hooks/useShellScale';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUiStore } from '@/stores/ui-store';
 import { useEmulatorStore } from '@/stores/emulator-store';
 import { useSettingsStore } from '@/stores/settings-store';
@@ -41,6 +42,9 @@ export default function Home() {
   const currentRomId = useEmulatorStore((s) => s.currentRomId);
   const activePanel = useUiStore((s) => s.activePanel);
   const isPlaying = emulatorStatus === 'running' || emulatorStatus === 'paused';
+
+  // Keep screen awake during gameplay
+  useWakeLock(isPlaying);
 
   const settingsKeyBindings = useSettingsStore((s) => s.keyBindings);
   const settingsShortcuts = useSettingsStore((s) => s.shortcuts);
@@ -199,53 +203,54 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ─── Desktop Library FAB ─────────────────────── */}
-      <button
-        className="library-fab font-pixel"
-        onClick={() => togglePanel('library')}
-        aria-label="Open library"
-        type="button"
-        style={isMobile ? { display: 'none' } : undefined}
-      >
-        Library
-      </button>
-
-      {/* ─── Desktop Saves FAB ──────────────────────── */}
-      <button
-        className="saves-fab font-pixel"
-        onClick={() => togglePanel('saves')}
-        aria-label="Open saves"
-        type="button"
-        style={isMobile ? { display: 'none' } : undefined}
-      >
-        Saves
-      </button>
-
-      {/* ─── Desktop Settings FAB ────────────────────── */}
-      <button
-        className="settings-fab"
-        onClick={() => togglePanel('settings')}
-        aria-label="Settings"
-        type="button"
-        style={isMobile ? { display: 'none' } : undefined}
-      >
-        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path d="M11.1 1.5l.7 2.1c.4.2.8.4 1.2.6l2.1-.5 1.5 1.5-.5 2.1c.3.4.5.8.6 1.2l2.1.7v2.1l-2.1.7c-.2.4-.4.8-.6 1.2l.5 2.1-1.5 1.5-2.1-.5c-.4.3-.8.5-1.2.6l-.7 2.1H8.9l-.7-2.1c-.4-.2-.8-.4-1.2-.6l-2.1.5-1.5-1.5.5-2.1c-.3-.4-.5-.8-.6-1.2L1.2 11V8.9l2.1-.7c.2-.4.4-.8.6-1.2l-.5-2.1L4.9 3.4l2.1.5c.4-.3.8-.5 1.2-.6l.7-2.1h2.2zM10 7a3 3 0 100 6 3 3 0 000-6z" />
-        </svg>
-      </button>
-
-      {/* ─── Desktop Profile FAB ──────────────────────── */}
-      <button
-        className="profile-fab"
-        onClick={() => togglePanel('profile')}
-        aria-label="Profile"
-        type="button"
-        style={isMobile ? { display: 'none' } : undefined}
-      >
-        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0H3z" />
-        </svg>
-      </button>
+      {/* ─── FABs: visible on desktop + mobile landscape ── */}
+      {(() => {
+        const hideFab = isMobile && !isLandscape ? { display: 'none' as const } : undefined;
+        return (
+          <>
+            <button
+              className="library-fab font-pixel"
+              onClick={() => togglePanel('library')}
+              aria-label="Open library"
+              type="button"
+              style={hideFab}
+            >
+              Library
+            </button>
+            <button
+              className="saves-fab font-pixel"
+              onClick={() => togglePanel('saves')}
+              aria-label="Open saves"
+              type="button"
+              style={hideFab}
+            >
+              Saves
+            </button>
+            <button
+              className="settings-fab"
+              onClick={() => togglePanel('settings')}
+              aria-label="Settings"
+              type="button"
+              style={hideFab}
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M11.1 1.5l.7 2.1c.4.2.8.4 1.2.6l2.1-.5 1.5 1.5-.5 2.1c.3.4.5.8.6 1.2l2.1.7v2.1l-2.1.7c-.2.4-.4.8-.6 1.2l.5 2.1-1.5 1.5-2.1-.5c-.4.3-.8.5-1.2.6l-.7 2.1H8.9l-.7-2.1c-.4-.2-.8-.4-1.2-.6l-2.1.5-1.5-1.5.5-2.1c-.3-.4-.5-.8-.6-1.2L1.2 11V8.9l2.1-.7c.2-.4.4-.8.6-1.2l-.5-2.1L4.9 3.4l2.1.5c.4-.3.8-.5 1.2-.6l.7-2.1h2.2zM10 7a3 3 0 100 6 3 3 0 000-6z" />
+              </svg>
+            </button>
+            <button
+              className="profile-fab"
+              onClick={() => togglePanel('profile')}
+              aria-label="Profile"
+              type="button"
+              style={hideFab}
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0H3z" />
+              </svg>
+            </button>
+          </>
+        );
+      })()}
 
       {/* ─── Desktop Sync Indicator ──────────────────── */}
       <div className="sync-indicator" style={isMobile ? { display: 'none' } : undefined}>

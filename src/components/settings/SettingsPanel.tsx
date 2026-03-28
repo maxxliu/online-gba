@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useDragControls, type PanInfo } from 'framer-m
 import { useUiStore } from '@/stores/ui-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useFullscreen } from '@/hooks/useFullscreen';
 import { KeyBindingEditor } from './KeyBindingEditor';
 import styles from './SettingsPanel.module.css';
 
@@ -15,14 +16,19 @@ export function SettingsPanel() {
   const isOpen = useUiStore((s) => s.activePanel === 'settings');
   const closePanel = useUiStore((s) => s.closePanel);
   const { isMobile } = useMediaQuery();
+  const { isFullscreen, toggleFullscreen } = useFullscreen();
   const dragControls = useDragControls();
 
   const volume = useSettingsStore((s) => s.volume);
   const scanlinesEnabled = useSettingsStore((s) => s.scanlinesEnabled);
   const backgroundAnimationEnabled = useSettingsStore((s) => s.backgroundAnimationEnabled);
+  const hapticEnabled = useSettingsStore((s) => s.hapticEnabled);
+  const controlOpacity = useSettingsStore((s) => s.controlOpacity);
   const setVolume = useSettingsStore((s) => s.setVolume);
   const toggleScanlines = useSettingsStore((s) => s.toggleScanlines);
   const toggleBackgroundAnimation = useSettingsStore((s) => s.toggleBackgroundAnimation);
+  const toggleHaptic = useSettingsStore((s) => s.toggleHaptic);
+  const setControlOpacity = useSettingsStore((s) => s.setControlOpacity);
 
   // Escape key to close
   useEffect(() => {
@@ -112,7 +118,51 @@ export function SettingsPanel() {
           </button>
         </div>
 
-        {/* Controls Section — desktop only */}
+        {/* Touch Controls Section — mobile only */}
+        {isMobile && (
+          <>
+            <h3 className={styles.sectionHeader}>Touch Controls</h3>
+            <div className={styles.toggleRow}>
+              <span className={styles.toggleLabel}>Haptic Feedback</span>
+              <button
+                className={styles.toggle}
+                data-checked={hapticEnabled}
+                onClick={toggleHaptic}
+                aria-label="Toggle haptic feedback"
+                type="button"
+              >
+                <span className={styles.toggleKnob} />
+              </button>
+            </div>
+            <div className={styles.volumeRow}>
+              <span className={styles.volumeLabel}>Control Opacity</span>
+              <input
+                className={styles.volumeSlider}
+                type="range"
+                min={30}
+                max={100}
+                value={Math.round(controlOpacity * 100)}
+                onChange={(e) => setControlOpacity(Number(e.target.value) / 100)}
+                aria-label="Control opacity"
+              />
+              <span className={styles.volumeValue}>{Math.round(controlOpacity * 100)}%</span>
+            </div>
+            <div className={styles.toggleRow}>
+              <span className={styles.toggleLabel}>Fullscreen</span>
+              <button
+                className={styles.toggle}
+                data-checked={isFullscreen}
+                onClick={toggleFullscreen}
+                aria-label="Toggle fullscreen"
+                type="button"
+              >
+                <span className={styles.toggleKnob} />
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Keyboard Controls Section — desktop only */}
         {!isMobile && (
           <>
             <h3 className={styles.sectionHeader}>Controls</h3>

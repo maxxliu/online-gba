@@ -12,8 +12,8 @@
 .controls[data-layout='portrait'] {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 4px;
+  padding: 4px 16px;
 }
 
 /* Landscape: overlay on canvas */
@@ -24,7 +24,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
+  padding: 0 max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px));
 }
 
 .controls[data-layout='landscape'] button {
@@ -106,6 +106,7 @@
     drop-shadow(0 4px 3px rgba(0, 0, 0, 0.35));
 }
 
+/* Cardinal directions */
 .dpadBody[data-direction='UP'] {
   transform: rotateX(8deg);
 }
@@ -122,18 +123,52 @@
   transform: rotateY(8deg);
 }
 
+/* Diagonal directions */
+.dpadBody[data-direction='UP-RIGHT'] {
+  transform: rotateX(6deg) rotateY(6deg);
+}
+
+.dpadBody[data-direction='UP-LEFT'] {
+  transform: rotateX(6deg) rotateY(-6deg);
+}
+
+.dpadBody[data-direction='DOWN-RIGHT'] {
+  transform: rotateX(-6deg) rotateY(6deg);
+}
+
+.dpadBody[data-direction='DOWN-LEFT'] {
+  transform: rotateX(-6deg) rotateY(-6deg);
+}
+
+/* LEFT-UP, RIGHT-UP etc. alternate orderings */
+.dpadBody[data-direction='LEFT-UP'] {
+  transform: rotateX(6deg) rotateY(-6deg);
+}
+
+.dpadBody[data-direction='RIGHT-UP'] {
+  transform: rotateX(6deg) rotateY(6deg);
+}
+
+.dpadBody[data-direction='LEFT-DOWN'] {
+  transform: rotateX(-6deg) rotateY(-6deg);
+}
+
+.dpadBody[data-direction='RIGHT-DOWN'] {
+  transform: rotateX(-6deg) rotateY(6deg);
+}
+
 .dpadVertical,
 .dpadHorizontal {
   position: absolute;
   background: var(--color-btn-dpad);
   border-radius: 6px;
-  opacity: 0.65;
+  opacity: var(--control-opacity, 0.75);
   transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .dpadBody[data-direction] .dpadVertical,
 .dpadBody[data-direction] .dpadHorizontal {
-  opacity: 0.85;
+  opacity: min(calc(var(--control-opacity, 0.75) + 0.15), 1);
   transition: opacity 34ms ease-out;
 }
 
@@ -167,52 +202,17 @@
   pointer-events: none;
 }
 
-.dpadZone {
+/* Unified touch surface covering the full D-pad for 8-directional input */
+.dpadTouchSurface {
   position: absolute;
+  inset: -8px;
+  border-radius: 50%;
   background: transparent;
   border: none;
   cursor: pointer;
   touch-action: none;
   z-index: 4;
   -webkit-tap-highlight-color: transparent;
-  min-width: 48px;
-  min-height: 48px;
-}
-
-.dpadUp {
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 48px;
-  height: 56px;
-  border-radius: 6px 6px 0 0;
-}
-
-.dpadDown {
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 48px;
-  height: 56px;
-  border-radius: 0 0 6px 6px;
-}
-
-.dpadLeft {
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 56px;
-  height: 48px;
-  border-radius: 6px 0 0 6px;
-}
-
-.dpadRight {
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 56px;
-  height: 48px;
-  border-radius: 0 6px 6px 0;
 }
 
 /* ─── Action Buttons (A/B) ──────────────────────── */
@@ -241,7 +241,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.65;
+  opacity: var(--control-opacity, 0.75);
   transition:
     transform 600ms cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 600ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -261,7 +261,7 @@
   box-shadow:
     0 0px 0 var(--color-btn-a-edge),
     0 1px 3px rgba(0, 0, 0, 0.25);
-  opacity: 0.85;
+  opacity: min(calc(var(--control-opacity, 0.75) + 0.15), 1);
   transition:
     transform 34ms ease-out,
     box-shadow 34ms ease-out,
@@ -308,7 +308,7 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
-  opacity: 0.65;
+  opacity: var(--control-opacity, 0.75);
   transition:
     transform 600ms cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 600ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -344,7 +344,7 @@
   box-shadow:
     0 0px 0 var(--color-bumper-edge),
     0 1px 2px rgba(0, 0, 0, 0.2);
-  opacity: 0.85;
+  opacity: min(calc(var(--control-opacity, 0.75) + 0.15), 1);
   transition:
     transform 34ms ease-out,
     box-shadow 34ms ease-out,
@@ -372,9 +372,9 @@
 }
 
 .systemBtn {
-  width: 52px;
-  height: 28px;
-  border-radius: 14px;
+  width: 60px;
+  height: 40px;
+  border-radius: 20px;
   border: none;
   cursor: pointer;
   touch-action: none;
@@ -384,7 +384,7 @@
   box-shadow:
     0 3px 0 var(--color-btn-start-edge),
     0 4px 6px rgba(0, 0, 0, 0.3);
-  opacity: 0.65;
+  opacity: var(--control-opacity, 0.75);
   transition:
     transform 600ms cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 600ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -396,7 +396,7 @@
   box-shadow:
     0 0px 0 var(--color-btn-start-edge),
     0 1px 2px rgba(0, 0, 0, 0.2);
-  opacity: 0.85;
+  opacity: min(calc(var(--control-opacity, 0.75) + 0.15), 1);
   transition:
     transform 34ms ease-out,
     box-shadow 34ms ease-out,
@@ -405,7 +405,7 @@
 
 .systemBtnLabel {
   font-family: var(--font-mono), monospace;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;

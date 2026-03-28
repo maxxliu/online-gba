@@ -97,7 +97,7 @@ Most directories are scaffolded. The following are **implemented**:
 - `stores/library-store.ts` — ROM library state (upload flow, search, CRUD) with Zustand + devtools
 - `lib/db.ts` — StorageProvider interface + IndexedDBProvider (ROM CRUD, cascading deletes, SHA-256 hashing, save state CRUD, playtime tracking)
 - `stores/emulator-store.ts` — emulator state (status, currentRom, speed, volume, error) with Zustand + devtools
-- `hooks/useEmulator.ts` — mGBA lifecycle, ROM loading, button forwarding, canvas container management, visibility auto-pause
+- `hooks/useEmulator.ts` — mGBA lifecycle, ROM loading, button forwarding, canvas container management (requires `isLandscape` for orientation switches), visibility auto-pause
 - `hooks/useEmulatorShortcuts.ts` — speed/save/pause keyboard shortcuts (Space, 1-5, F5, F8)
 - `hooks/usePlaytime.ts` — per-ROM playtime tracking with 1s tick, 30s persist, flush on pause/quit
 - `hooks/useSaveStates.ts` — save state CRUD orchestration, auto-save cycling slots 0-2 every 5 min
@@ -182,7 +182,7 @@ npx tsx tests/fixtures/generate-test-rom.ts  # Regenerate test ROM fixture
 - Touch events need `preventDefault()` to avoid double-firing
 - Test on real mobile devices, not just devtools resize
 - In useEffect cleanup, capture `ref.current` in a local variable before the return — React exhaustive-deps rule requires it
-- Do NOT conditionally render elements that carry refs used by ResizeObserver/hooks — `useMediaQuery` SSR-defaults to `isMobile: true`, so conditional returns remove desktop ref targets before hooks attach. Always render ref targets in the DOM and hide with `style={{ display: 'none' }}` instead.
+- Do NOT conditionally render elements that carry refs used by ResizeObserver/hooks — `useMediaQuery` SSR-defaults to `isMobile: true`, so conditional returns remove desktop ref targets before hooks attach. Always render ref targets in the DOM and hide with `style={{ display: 'none' }}` instead. This applies to **both** desktop/mobile toggling AND portrait/landscape toggling within mobile — both orientation containers must stay in the DOM.
 - Mobile portrait (375px viewport): ~343px usable width after padding. Verify touch control row totals fit before adding elements to a single flex row.
 - Do NOT call Zustand store methods inside selectors (e.g. `useStore(s => s.getList())`) — returns new array refs each render, causing infinite loops. Select raw state + `useMemo` instead.
 - ESLint in this project rejects underscore-prefixed unused params (`_param`). For stub methods, use `// eslint-disable-next-line @typescript-eslint/no-unused-vars` on the line above.

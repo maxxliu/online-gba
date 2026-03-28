@@ -106,6 +106,8 @@ export interface UserSettings {
   volume: number;
   scanlinesEnabled: boolean;
   backgroundAnimationEnabled: boolean;
+  hapticEnabled?: boolean;
+  controlOpacity?: number;
 }
 
 // ─── Upload ─────────────────────────────────────

@@ -47,3 +47,52 @@
 .segment:hover .label {
   color: var(--color-text);
 }
+
+/* ─── Mobile: larger touch targets ──────────── */
+
+@media (max-width: 767.98px) {
+  .bar {
+    height: 32px;
+    border-radius: 16px;
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .segment {
+    width: 40px;
+    height: 28px;
+    border-radius: 14px;
+  }
+
+  .indicator {
+    border-radius: 14px;
+  }
+
+  .label {
+    font-size: 11px;
+  }
+}
+
+/* Phone landscape — also needs larger targets */
+@media (max-height: 500px) and (orientation: landscape) {
+  .bar {
+    height: 28px;
+    border-radius: 14px;
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .segment {
+    width: 36px;
+    height: 24px;
+    border-radius: 12px;
+  }
+
+  .indicator {
+    border-radius: 12px;
+  }
+
+  .label {
+    font-size: 10px;
+  }
+}

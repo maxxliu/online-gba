@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
+import { useSettingsStore } from '@/stores/settings-store';
 import styles from './TouchControls.module.css';
 
 interface TouchControlsProps {
@@ -10,14 +11,45 @@ interface TouchControlsProps {
   layout: 'portrait' | 'landscape';
 }
 
-const DPAD_DIRECTIONS = ['UP', 'DOWN', 'LEFT', 'RIGHT'] as const;
+const canVibrate = typeof navigator !== 'undefined' && 'vibrate' in navigator;
 
-const dpadZoneStyles: Record<string, string> = {
-  UP: styles.dpadUp,
-  DOWN: styles.dpadDown,
-  LEFT: styles.dpadLeft,
-  RIGHT: styles.dpadRight,
-};
+const DPAD_DIRECTIONS = ['UP', 'DOWN', 'LEFT', 'RIGHT'] as const;
+type DpadDir = (typeof DPAD_DIRECTIONS)[number];
+
+/** Compute which directions are pressed from pointer position relative to D-pad center */
+function getDpadDirections(
+  clientX: number,
+  clientY: number,
+  rect: DOMRect,
+): DpadDir[] {
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const dx = clientX - cx;
+  const dy = clientY - cy;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const deadZone = rect.width * 0.12;
+  if (dist < deadZone) return [];
+
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI); // -180 to 180, 0=right
+  const dirs: DpadDir[] = [];
+
+  // 8-directional zones: each cardinal +-22.5deg pure, between is diagonal
+  // Right: -22.5 to 22.5
+  // Down-Right: 22.5 to 67.5
+  // Down: 67.5 to 112.5
+  // Down-Left: 112.5 to 157.5
+  // Left: 157.5 to 180 or -180 to -157.5
+  // Up-Left: -157.5 to -112.5
+  // Up: -112.5 to -67.5
+  // Up-Right: -67.5 to -22.5
+
+  if (angle >= -67.5 && angle <= 67.5) dirs.push('RIGHT');
+  if (angle >= 112.5 || angle <= -112.5) dirs.push('LEFT');
+  if (angle >= 22.5 && angle <= 157.5) dirs.push('DOWN');
+  if (angle >= -157.5 && angle <= -22.5) dirs.push('UP');
+
+  return dirs;
+}
 
 export function TouchControls({
   onButtonPress,
@@ -25,16 +57,27 @@ export function TouchControls({
   pressedButtons,
   layout,
 }: TouchControlsProps) {
-  const activeDirection =
-    DPAD_DIRECTIONS.find((d) => pressedButtons[d]) ?? null;
+  const hapticEnabled = useSettingsStore((s) => s.hapticEnabled);
+  const controlOpacity = useSettingsStore((s) => s.controlOpacity);
+
+  // Track which D-pad directions are currently pressed by the touch surface
+  const activeDpadDirs = useRef<Set<DpadDir>>(new Set());
+  const dpadRef = useRef<HTMLDivElement>(null);
+
+  // Compute visual direction attribute for the 3D tilt effect
+  const activeDirections = DPAD_DIRECTIONS.filter((d) => pressedButtons[d]);
+  const dpadDataDir = activeDirections.length > 0 ? activeDirections.join('-') : undefined;
 
   const handlePointerDown = useCallback(
     (name: string) => (e: React.PointerEvent<HTMLButtonElement>) => {
       e.preventDefault();
       (e.target as HTMLButtonElement).setPointerCapture(e.pointerId);
+      if (canVibrate && hapticEnabled) {
+        navigator.vibrate(name === 'L' || name === 'R' ? 12 : 8);
+      }
       onButtonPress(name);
     },
-    [onButtonPress],
+    [onButtonPress, hapticEnabled],
   );
 
   const handlePointerUp = useCallback(
@@ -45,29 +88,90 @@ export function TouchControls({
     [onButtonRelease],
   );
 
+  // D-pad unified touch surface handlers
+  const updateDpadFromPointer = useCallback(
+    (e: React.PointerEvent) => {
+      const el = dpadRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const newDirs = getDpadDirections(e.clientX, e.clientY, rect);
+      const prev = activeDpadDirs.current;
+
+      // Release directions no longer active
+      Array.from(prev).forEach((d) => {
+        if (!newDirs.includes(d)) {
+          prev.delete(d);
+          onButtonRelease(d);
+        }
+      });
+      // Press newly active directions
+      newDirs.forEach((d) => {
+        if (!prev.has(d)) {
+          prev.add(d);
+          onButtonPress(d);
+        }
+      });
+    },
+    [onButtonPress, onButtonRelease],
+  );
+
+  const handleDpadDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      (e.target as HTMLDivElement).setPointerCapture(e.pointerId);
+      if (canVibrate && hapticEnabled) {
+        navigator.vibrate(8);
+      }
+      updateDpadFromPointer(e);
+    },
+    [updateDpadFromPointer, hapticEnabled],
+  );
+
+  const handleDpadMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (e.pressure > 0) {
+        updateDpadFromPointer(e);
+      }
+    },
+    [updateDpadFromPointer],
+  );
+
+  const handleDpadUp = useCallback(
+    (e: React.PointerEvent) => {
+      e.preventDefault();
+      const prev = activeDpadDirs.current;
+      Array.from(prev).forEach((d) => {
+        onButtonRelease(d);
+      });
+      prev.clear();
+    },
+    [onButtonRelease],
+  );
+
   // Shared sub-renders
 
   const dpad = (
-    <div className={styles.dpad}>
+    <div className={styles.dpad} ref={dpadRef}>
       <div
         className={styles.dpadBody}
-        data-direction={activeDirection ?? undefined}
+        data-direction={dpadDataDir}
       >
         <div className={styles.dpadVertical} />
         <div className={styles.dpadHorizontal} />
         <div className={styles.dpadCenter} />
       </div>
-      {DPAD_DIRECTIONS.map((name) => (
-        <button
-          key={name}
-          className={`${styles.dpadZone} ${dpadZoneStyles[name]}`}
-          onPointerDown={handlePointerDown(name)}
-          onPointerUp={handlePointerUp(name)}
-          onPointerLeave={handlePointerUp(name)}
-          onPointerCancel={handlePointerUp(name)}
-          aria-label={name}
-        />
-      ))}
+      {/* Single unified touch surface covering entire D-pad */}
+      <div
+        className={styles.dpadTouchSurface}
+        onPointerDown={handleDpadDown}
+        onPointerMove={handleDpadMove}
+        onPointerUp={handleDpadUp}
+        onPointerLeave={handleDpadUp}
+        onPointerCancel={handleDpadUp}
+        role="button"
+        aria-label="D-pad"
+        tabIndex={-1}
+      />
     </div>
   );
 
@@ -159,9 +263,11 @@ export function TouchControls({
 
   // ─── Portrait Layout ─────────────────────────────
 
+  const opacityStyle = { '--control-opacity': controlOpacity } as React.CSSProperties;
+
   if (layout === 'portrait') {
     return (
-      <div className={styles.controls} data-layout="portrait">
+      <div className={styles.controls} data-layout="portrait" style={opacityStyle}>
         <div className={styles.bumperRow}>
           {bumperL}
           {bumperR}
@@ -180,7 +286,7 @@ export function TouchControls({
   // ─── Landscape Layout ────────────────────────────
 
   return (
-    <div className={styles.controls} data-layout="landscape">
+    <div className={styles.controls} data-layout="landscape" style={opacityStyle}>
       <div className={styles.landscapeLeft}>
         {bumperL}
         {dpad}

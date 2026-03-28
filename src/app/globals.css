@@ -154,8 +154,10 @@ body {
 
 
 .mobile-speed-bar {
-  height: 32px;
+  height: 40px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 /* ─── Mobile Landscape Container ────────────────── */
@@ -302,6 +304,49 @@ body {
   top: 156px;
   right: 16px;
   z-index: 50;
+}
+
+/* ─── FABs: mobile landscape overrides ─────────── */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .library-fab {
+    padding: 6px 10px;
+    font-size: 11px;
+    opacity: 0.7;
+    z-index: 120;
+  }
+
+  .saves-fab {
+    padding: 6px 10px;
+    font-size: 11px;
+    opacity: 0.7;
+    z-index: 120;
+  }
+
+  .settings-fab {
+    width: 34px;
+    height: 34px;
+    opacity: 0.7;
+    z-index: 120;
+    top: auto;
+    bottom: 44px;
+  }
+
+  .profile-fab {
+    width: 34px;
+    height: 34px;
+    opacity: 0.7;
+    z-index: 120;
+    top: auto;
+    bottom: 8px;
+  }
+
+  .library-fab:active,
+  .saves-fab:active,
+  .settings-fab:active,
+  .profile-fab:active {
+    opacity: 1;
+  }
 }
 
 /* ─── Scanlines Overlay (mobile) ─────────────── */
